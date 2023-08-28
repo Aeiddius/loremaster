@@ -1,0 +1,3 @@
+const profilebox = {
+  name: `ProfileBox`,
+}

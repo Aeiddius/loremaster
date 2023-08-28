@@ -1,0 +1,33 @@
+@use '../../../css/vars' as *;
+
+.card-container {
+  height: 100%;
+  margin-top: 100px;
+}
+
+
+.card {
+  // Block
+  width: 50vw;
+  padding: $gb-padding; 
+  border-radius: $gb-border-radius; 
+   
+  // Element
+  background-color: white; 
+  font-size: 14px;
+  
+
+}  
+
+.card-content {
+  font-family: Rubik Light !important;
+}
+
+
+
+
+#title {
+  // Element
+  color: white;
+  font-family: Rubik Light;
+}
