@@ -1,0 +1,84 @@
+@use '../../../css/vars' as *;
+
+$title--font-size: 16px;
+$profile--font-size: 12px;
+$category--font-size: 13px;
+
+
+.profilebox {
+  // Block
+  float: right;
+  min-height: 100px;
+  width: 250px;
+  border-radius: 10px;
+  padding: 5px;
+  margin-left: 20px;
+
+  // Element
+  background-color: $grey; 
+  font-size: $profile--font-size; 
+
+  // Children
+  ul {
+    margin: 0px;
+    padding: 0px;
+    padding-left: 12px;
+  }
+
+  td {
+    padding: 0px;
+  }
+
+  .category--name {
+    // Block
+    width: 100%;
+    border-radius: 5px;
+
+    // Element
+    background-color: $blue;
+    color: white;
+    text-align: center;
+    font-size: $category--font-size;
+  }
+
+  .entry--name {
+    font-weight: bold;
+    vertical-align: text-top;
+    text-align: start;
+  }
+
+  .entry--value {
+    margin-left: 10px;
+  }
+
+  .button {
+    text-align: left;
+  }
+
+  .profile--image {
+    max-height: 500px;
+    width: 100%;
+    object-fit: contain;
+  }
+  
+  .profile--title {
+    // Block
+    display: inline-block;
+    width: 100%;
+    border-radius: 5px;
+    padding: 6px;
+    margin-bottom: 10px;
+
+    // Element
+    background-color: $blue;
+    color: white;
+    text-align: center;
+    font-size: $title--font-size;
+  }
+
+  .tab-buttons {
+    text-align: center;
+  }
+
+}
+

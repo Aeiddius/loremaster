@@ -2,6 +2,7 @@
 
 # Files
 `.gitignore` - files and folders to ignore for the github commit
+
 `.nojekyll` - disables the default jekyll on github pages
 
 

@@ -3,19 +3,25 @@
 .card-container {
   height: 100%;
   margin-top: 100px;
+  margin-bottom: 100px;
 }
 
 
 .card {
   // Block
-  width: 50vw;
+  width: 60vw;
   padding: $gb-padding; 
   border-radius: $gb-border-radius; 
-   
+    
   // Element
   background-color: white; 
-  font-size: 14px;
+  color: #434343;
+  font-size: 13px;
+  font-family: Rubik Light; 
+  line-height: 20px;
   
+  // Misc
+  overflow: auto;
 
 }  
 

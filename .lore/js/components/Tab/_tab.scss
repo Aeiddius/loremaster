@@ -31,11 +31,13 @@
 .button--autolink {
   background-color: transparent;
   color: $blue;
+  font-weight:400;
+  // font-family: Rubik Light !important;
 }
 
 .button--error {
   color: $red;
-
+  font-weight:400;
   &:hover {
     background-color: $red;
     color: white;

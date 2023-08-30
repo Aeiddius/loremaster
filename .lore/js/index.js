@@ -57,7 +57,7 @@ function mount(app) {
     breadcrumbs,
     card,
     profilebox,
-    tabbutton,
+    tab,
     toggle,
   ]
 
@@ -199,7 +199,10 @@ const card = {
   data() {
     return {
       tabs: {},
+      profile: {},
       rerender: true,
+
+      divisor: "========================================================"
     }
   },
   props: {
@@ -212,46 +215,79 @@ const card = {
     content: {
       immediate: true,
       async handler(value) {      
+        // Return if value is empty
         if (value == '') return  
-        
-        
-        // Gettabs
-        this.tabs = this.getTabs(value, this.directory)
-        
-        this.rerender = false;
 
-        await Vue.nextTick()
-        
-        this.rerender = true;
+        // Content to be modified
+        let content = value
+
+        // Extracts profile box content
+        if (this.hasData(value)) {
+          const rawsplit = value.split(this.divisor)
+          this.profile = jsyaml.load(autoLink(rawsplit[1], this.directory), 'utf8');
+
+          // Sets into content the half without any profile box content
+          content = rawsplit[2].trim()
+
+          console.log(this.profile)
+        }
+
+        // Get tabs
+        this.tabs = this.getTabs(content, this.directory)
+
+        await this.refresh()
       }
     }
   },
   methods: {
     getTabs(value, directory) {
 
-      const results = {}; // Initialize an empty object to store parsed data
+      const results = {};
       if (value.includes("===")) {
-        const sections = value.split("===").filter(section => section.trim() !== ""); // Split text by "===", remove empty sections
+        // Split text by "===", remove empty sections
+        const sections = value.split("===").filter(section => section.trim() !== ""); 
       
         // Loop through sections by index, incrementing by  2 to pair headers and content
         for (let i = 0; i < sections.length; i += 2) {
-          const key = sections[i].trim(); // Get the section header and convert to lowercase
-          const value = sections[i + 1].trim(); // Get the section content
-          results[key] = value; // Assign the section header as a key and content as the corresponding value in the object
+          // Get the section header and convert to lowercase
+          const key = sections[i].trim(); 
+          // Get the section content
+          const value = sections[i + 1].trim(); 
+          // Assign the section header as a key and content as the corresponding value in the object
+          results[key] = value; 
         }
         
+        // Parse data
         for (const name in results) {
+          // Convert md into html
           results[name] = marked.parse(results[name]);
+          // convert custom components into html
           results[name] = autoLink(results[name], directory)
         }
       } else {
+        // if there is no tabs
         results["default"] = marked.parse(value);
         results["default"] = autoLink(results["default"], directory)
       }
-
-      console.log(results)
-
       return results;
+    },
+    hasData(value) {
+      const equalsIndex1 = value.indexOf(this.divisor);
+      const equalsIndex2 = value.lastIndexOf(this.divisor);
+      
+      if (equalsIndex1 !== -1 && equalsIndex2 !== -1 && equalsIndex1 < equalsIndex2) {
+          const textBetweenEquals = value.substring(equalsIndex1 + 1, equalsIndex2);
+          return textBetweenEquals.length > 0;
+      }
+      
+      return false;
+    },
+    
+    
+    async refresh() {
+      this.rerender = false;
+      await Vue.nextTick()
+      this.rerender = true;
     }
   },
   template: `
@@ -262,15 +298,10 @@ const card = {
       
       <div class="card">
         <BreadCrumbs/>
+        <ProfileBox :profile="profile"/>
 
         <div id="card-content" v-if="rerender">
-          <template v-for="(value, name, index) in tabs">
-            <TabButton v-if="Object.keys(tabs).length != 1" :name="name" :id="name + '-card-button'" group="card-content" :class="[index == 0 ? 'button--active' : '']"/>
-          </template>
-        
-          <template v-for="(value, name, index) in tabs">
-            <div :id="name + '-card-content'" :class="['card-content', index == 0 ? '' : 'hide']" v-html="value"></div>
-          </template>
+            <Tab :tabs="tabs"/>
         </div>
 
       </div>
@@ -280,22 +311,104 @@ const card = {
 }
 
 const profilebox = {
-  name: `ProfileBox`,
+  name: "ProfileBox",
+
+  props: {
+    profile: { type: Object }
+  },
+  // watch: {
+  //   profile: {
+  //     immediate: true,
+  //     handler(value) {
+
+  //     }
+  //   }
+  // },
+  template: `
+    <div class="profilebox">
+
+    <span class="profile--title">
+      {{ profile.Title }}
+    </span>
+
+    <!-- Image -->
+    <template v-if="profile.Image">
+        <Tab :tabs="profile.Image" type="image"/>      
+    </template>
+
+    <!-- BODY  -->
+      <table>
+        <tbody>
+        <template v-for="(category_content, category) in profile.Content">
+          <!-- Category name -->
+          <tr class="category" v-if="category !== 'Desc'"> 
+            <td class="category--name" colspan="100%">{{ category }}</td>
+          </tr>
+          
+          <!-- Content -->
+          <template v-for="(entry_value, entry) in category_content">
+          <tr>
+            <td class="entry--name">{{entry}}</td>
+            <td>
+               <!-- If content is a list -->
+               <template v-if="Array.isArray(entry_value)">
+                <ul class="entry--value">
+                  <li v-for="(list_value, index) of entry_value" v-html="list_value"></li>      
+                </ul>
+              </template>
+              <!-- if content is simply a string -->
+              <template v-else>
+                <span class="entry--value" v-html="entry_value"></span>
+              </template>
+            </td>
+          </tr>
+          </template>
+        </template>
+
+        </tbody>
+      </table>
+
+
+
+    </div>
+  `
 }
 
-const tabbutton = {
-  name: "TabButton",
+const tab = {
+  name: "Tab",
+  data() {
+    return {
+      groupclass: "",
+      buttonclass: ""
+    }
+  },
   props: {
-    name: { type: String, default: "default" },
-    group: { type: String, required: true }
+    tabs: { type: Object, required: true },
+    type: { type: String, default: "text" },
+    btnClass: { type: String, default: '' }
+  },
+  mounted(){
+    this.groupclass = this.gen(6)
+    this.buttonclass = this.gen(6)
+
   },
   methods: {
-    toggleTab() {
+    gen(length) {
+      const characters = 'abcdefghijklmnopqrstuvwxyz';
+      let randomWord = '';
+    
+      for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * characters.length);
+        randomWord += characters[randomIndex];
+      }
+      return randomWord;
+    },
+    toggleTab(name) {
       // Make target tab appear
-      const tabs = document.getElementsByClassName(this.group)
-      const targetTab = `${this.name}-card-content`
+      const targetTab = `${name}-${this.groupclass}-content`
+      const tabs = document.getElementsByClassName(this.groupclass)
       for (const tab of tabs) {
-        if (targetTab == tab.id) {
+        if (tab.id == targetTab) {
           tab.classList.remove("hide")
           continue;
         } 
@@ -303,21 +416,48 @@ const tabbutton = {
       }
 
       // Highlight target button
-      const targetBtn = `${this.name}-card-button`
-      const buttons = document.getElementsByClassName(this.group+'-button')
+      const targetBtn = `${name}-${this.buttonclass}-button`
+      const buttons = document.getElementsByClassName(this.buttonclass)
       for (const btn of buttons) {
-        if (targetBtn == btn.id) {
+        if (btn.id == targetBtn) {
           btn.classList.add("button--active")
           continue
         }
         btn.classList.remove("button--active")
       }
     }
+
   },
   template: `
-    <button :class="['button', group+'-button']" @click="toggleTab">
-      {{ name }}
-    </button>
+    <div>
+      <div class="tab-buttons">
+        <template v-for="(value, name, index) in tabs">
+          <button v-if="Object.keys(tabs).length != 1"
+                  :id="name + '-' + buttonclass + '-button'"
+                  :class="['button', index == 0 ? 'button--active' : '', buttonclass, btnClass]"
+                  @click="toggleTab(name)">
+            {{ name }}      
+          </button>
+        </template>
+      </div>
+
+      <template v-for="(value, name, index) in tabs">
+        <template v-if="type === 'text'">
+          <div :id="name + '-' + groupclass + '-content'"
+               :class="[groupclass, index == 0 ? '' : 'hide']"
+               v-html="value">
+          </div>
+        </template>
+        <template v-if="type === 'image'">
+          <img :id="name + '-' + groupclass + '-content'"
+               :class="[groupclass, index == 0 ? '' : 'hide']"
+               :src="value"
+               :alt="name"
+               class="profile--image"/>
+          
+        </template>
+      </template>
+    </div>
   `
 }
 
