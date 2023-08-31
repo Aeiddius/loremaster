@@ -1,5 +1,7 @@
 
 var root;
+var historyList = [];
+var globalPosition = null;
 
 function start() {
   const app = Vue.createApp({
@@ -29,11 +31,42 @@ function start() {
 
       this.reload(pageId)
 
+      // window.onpopstate = function(event) {
+      //   event.preventDefault();
+      //   console.log(event)
+      //   // historyList
+      // };
+      window.addEventListener('forward', event => {
+
+        if (globalPosition+1 < historyList.length) globalPosition++
+        this.reload(historyList[globalPosition], true)
+      });
+
+      window.addEventListener('back', event => {
+        if (globalPosition !== 0) globalPosition--
+        this.reload(historyList[globalPosition], true)
+      });
 
     },
     methods: {
-      async reload(pageId) {
+      async reload(pageId, isPopState=false) {
+        // Prevents repeated history when same page button is clicked
+        if (isPopState == false && pageId == historyList[globalPosition]) return
+        // Deal with Global Positioning
+        if (globalPosition == null) globalPosition = 0
+        else if(!isPopState) globalPosition += 1
+        
+        // Clear history before the latest new page
+        if (isPopState == false && globalPosition >= 0 && globalPosition < historyList.length) {
+          // console.log("before: ", isPopState, historyList, globalPosition);
+          historyList.length = globalPosition
+          // console.log("after: ", isPopState, historyList, globalPosition);
+        }
 
+        if (isPopState == false) historyList.push(pageId)
+        // console.log("gistory: ", historyList, globalPosition, pageId)
+         
+ 
         // Get metadata file 
         let isError = false
         let pageMeta = this.directory[pageId];
@@ -210,6 +243,69 @@ function makeid(length) {
 
   return randomWord;
 }
+
+// Source; https://github.com/johanholmerin/popstate-direction
+
+// Keep track of current position
+let currentIndex = (history.state && history.state.index) || 0;
+
+// Set initial index, before replacing setters
+if (!history.state || !('index' in history.state)) {
+  history.replaceState(
+    { index: currentIndex, state: history.state },
+    document.title
+  );
+}
+
+// Native functions
+const getState = Object.getOwnPropertyDescriptor(History.prototype, 'state')
+  .get;
+const { pushState, replaceState } = history;
+
+// Detect forward and back changes
+function onPopstate() {
+  const state = getState.call(history);
+
+  // State is unset when `location.hash` is set. Update with incremented index
+  if (!state) {
+    replaceState.call(history, { index: currentIndex + 1 }, document.title);
+  }
+  const index = state ? state.index : currentIndex + 1;
+
+  const direction = index > currentIndex ? 'forward' : 'back';
+  window.dispatchEvent(new Event(direction));
+
+  currentIndex = index;
+}
+
+// Create functions which modify index
+function modifyStateFunction(func, n) {
+  return (state, ...args) => {
+    func.call(history, { index: currentIndex + n, state }, ...args);
+    // Only update currentIndex if call succeeded
+    currentIndex += n;
+  };
+}
+
+// Override getter to only return the real state
+function modifyStateGetter(cls) {
+  const { get } = Object.getOwnPropertyDescriptor(cls.prototype, 'state');
+
+  Object.defineProperty(cls.prototype, 'state', {
+    configurable: true,
+    enumerable: true,
+    get() {
+      return get.call(this).state;
+    },
+    set: undefined
+  });
+}
+
+modifyStateGetter(History);
+modifyStateGetter(PopStateEvent);
+history.pushState = modifyStateFunction(pushState, 1);
+history.replaceState = modifyStateFunction(replaceState, 0);
+window.addEventListener('popstate', onPopstate);
 
 
 

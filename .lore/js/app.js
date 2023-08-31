@@ -1,4 +1,6 @@
 var root;
+var historyList = [];
+var globalPosition = null;
 
 function start() {
   const app = Vue.createApp({
@@ -28,11 +30,42 @@ function start() {
 
       this.reload(pageId)
 
+      // window.onpopstate = function(event) {
+      //   event.preventDefault();
+      //   console.log(event)
+      //   // historyList
+      // };
+      window.addEventListener('forward', event => {
+
+        if (globalPosition+1 < historyList.length) globalPosition++
+        this.reload(historyList[globalPosition], true)
+      });
+
+      window.addEventListener('back', event => {
+        if (globalPosition !== 0) globalPosition--
+        this.reload(historyList[globalPosition], true)
+      });
 
     },
     methods: {
-      async reload(pageId) {
+      async reload(pageId, isPopState=false) {
+        // Prevents repeated history when same page button is clicked
+        if (isPopState == false && pageId == historyList[globalPosition]) return
+        // Deal with Global Positioning
+        if (globalPosition == null) globalPosition = 0
+        else if(!isPopState) globalPosition += 1
+        
+        // Clear history before the latest new page
+        if (isPopState == false && globalPosition >= 0 && globalPosition < historyList.length) {
+          // console.log("before: ", isPopState, historyList, globalPosition);
+          historyList.length = globalPosition
+          // console.log("after: ", isPopState, historyList, globalPosition);
+        }
 
+        if (isPopState == false) historyList.push(pageId)
+        // console.log("gistory: ", historyList, globalPosition, pageId)
+         
+ 
         // Get metadata file 
         let isError = false
         let pageMeta = this.directory[pageId];
