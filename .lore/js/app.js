@@ -20,29 +20,39 @@ function start() {
       this.directory = metadata.directory
       
       // Get query id
-      let pageId = (new URLSearchParams(window.location.search)).get('p');
+      let pageId = this.getCurrentPageId();
       if (pageId == null || pageId == "") pageId = "home"
       if (!this.directory.hasOwnProperty(pageId)) pageId = "404"
 
-      const pageMeta = this.directory[pageId];
+      
 
-      this.reload(pageMeta.path, pageId, pageMeta.title)
+      this.reload(pageId)
 
 
     },
     methods: {
-      async reload(path, id, name) {
-        const pageFile = await (await fetch(path)).text()
+      async reload(pageId) {
 
-        this.content = pageFile 
-        this.pageName = name
-
-        if (id == "404") {
-          const pageId = (new URLSearchParams(window.location.search)).get('p');
-          this.content = this.content + `\n\nPage <span class="error">${pageId}</span> does not exist.`
+        // Get metadata file 
+        let isError = false
+        let pageMeta = this.directory[pageId];
+        if (!this.directory.hasOwnProperty(pageId)) {
+          pageMeta = this.directory["404"];
+          isError = true;
         }
 
+        // Update Card Content
+        this.content = await (await fetch(pageMeta.path)).text() 
+        this.pageName = pageMeta.title
+
+        if (isError = true) {
+          this.content = this.content + `\n\nPage <span class="error">${pageId}</span> does not exist.`}
+        
+        // Update App
         this.$forceUpdate();
+      },
+      getCurrentPageId() {
+        return (new URLSearchParams(window.location.search)).get('p');
       }
     }
   })
