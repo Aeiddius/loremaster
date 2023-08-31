@@ -16,6 +16,11 @@ const card = {
     directory: { type: Object, required: true }
   },
   components: ['BreadCrumbs'],
+  computed: {
+    isProfileExist() {
+      return Object.keys(this.profile).length != 0;
+    }
+  },
   watch: {
     content: {
       immediate: true,
@@ -26,6 +31,7 @@ const card = {
         // Content to be modified
         let content = value
 
+        this.profile = {}
         // Extracts profile box content
         if (this.hasData(value)) {
           const rawsplit = value.split(this.divisor)
@@ -40,7 +46,12 @@ const card = {
         // Get tabs
         this.tabs = this.getTabs(content, this.directory)
 
+        
+
         await this.refresh()
+
+        this.fixQuote()
+        console.log(this.profile)
       }
     }
   },
@@ -87,12 +98,18 @@ const card = {
       
       return false;
     },
-    
-    
     async refresh() {
       this.rerender = false;
       await Vue.nextTick()
       this.rerender = true;
+    },
+    fixQuote() {
+      const blockquote = document.getElementById("card-content").getElementsByTagName("blockquote")
+      if (blockquote.length != 0) {
+        for (const quote of blockquote) {
+          quote.innerHTML = quote.innerHTML.replace(' - ', '<br> - ')
+        }
+      }
     }
   },
   template: `
@@ -103,7 +120,8 @@ const card = {
       
       <div class="card">
         <BreadCrumbs/>
-        <ProfileBox :profile="profile"/>
+
+        <ProfileBox :profile="profile" v-if="isProfileExist"/>
 
         <div id="card-content" v-if="rerender">
             <Tab :tabs="tabs"/>

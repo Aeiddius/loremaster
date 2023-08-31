@@ -1,24 +1,57 @@
 @use '../../../css/vars' as *;
 
+@use "../../../css/vars" as *;
+
 $title--font-size: 16px;
 $profile--font-size: 12px;
 $category--font-size: 13px;
+$profile--width: 250px;
 
 
 .profilebox {
   // Block
   float: right;
+  display: block;
   min-height: 100px;
-  width: 250px;
+  width: $profile--width;
   border-radius: 10px;
   padding: 5px;
   margin-left: 20px;
 
   // Element
-  background-color: $grey; 
-  font-size: $profile--font-size; 
+  background-color: $grey;
+  font-size: $profile--font-size;
 
   // Children
+  .tab-buttons {
+    text-align: center;
+  }
+
+  .profile--image {
+    max-height: 500px;
+    width: 100%;
+    object-fit: contain;
+  }
+
+  .profile--title {
+    // Block
+    display: inline-block;
+    width: 100%;
+    border-radius: 5px;
+    padding: 6px;
+    margin-bottom: 10px;
+
+    // Element
+    background-color: $blue;
+    color: white;
+    text-align: center;
+    font-size: $title--font-size;
+  }
+}
+
+
+// Content
+.profilebox {
   ul {
     margin: 0px;
     padding: 0px;
@@ -50,35 +83,4 @@ $category--font-size: 13px;
   .entry--value {
     margin-left: 10px;
   }
-
-  .button {
-    text-align: left;
-  }
-
-  .profile--image {
-    max-height: 500px;
-    width: 100%;
-    object-fit: contain;
-  }
-  
-  .profile--title {
-    // Block
-    display: inline-block;
-    width: 100%;
-    border-radius: 5px;
-    padding: 6px;
-    margin-bottom: 10px;
-
-    // Element
-    background-color: $blue;
-    color: white;
-    text-align: center;
-    font-size: $title--font-size;
-  }
-
-  .tab-buttons {
-    text-align: center;
-  }
-
 }
-

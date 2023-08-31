@@ -35,6 +35,7 @@ Content:
     - Tough Skin
     - Atomic Sense
     - Enhanced Brain
+
   Status:
     Status: [[Alive]]
     Birthplace: Desteria, Shanty Town

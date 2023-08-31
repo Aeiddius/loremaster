@@ -12,21 +12,12 @@ const tab = {
     btnClass: { type: String, default: '' }
   },
   mounted(){
-    this.groupclass = this.gen(6)
-    this.buttonclass = this.gen(6)
+    this.groupclass = makeid(6)
+    this.buttonclass = makeid(6)
 
   },
   methods: {
-    gen(length) {
-      const characters = 'abcdefghijklmnopqrstuvwxyz';
-      let randomWord = '';
-    
-      for (let i = 0; i < length; i++) {
-        const randomIndex = Math.floor(Math.random() * characters.length);
-        randomWord += characters[randomIndex];
-      }
-      return randomWord;
-    },
+
     toggleTab(name) {
       // Make target tab appear
       const targetTab = `${name}-${this.groupclass}-content`
@@ -53,7 +44,7 @@ const tab = {
 
   },
   template: `
-    <div>
+
       <div class="tab-buttons">
         <template v-for="(value, name, index) in tabs">
           <button v-if="Object.keys(tabs).length != 1"
@@ -68,7 +59,7 @@ const tab = {
       <template v-for="(value, name, index) in tabs">
         <template v-if="type === 'text'">
           <div :id="name + '-' + groupclass + '-content'"
-               :class="[groupclass, index == 0 ? '' : 'hide']"
+               :class="[groupclass, index == 0 ? '' : 'hide', 'tab']"
                v-html="value">
           </div>
         </template>
@@ -81,6 +72,6 @@ const tab = {
           
         </template>
       </template>
-    </div>
+
   `
 }

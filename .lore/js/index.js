@@ -180,6 +180,27 @@ function changePage(name, id, path) {
   root.reload(path, "404", name)
 }
 
+var globalIdList = []
+
+function makeid(length) {
+  const characters = 'abcdefghijklmnopqrstuvwxyz';
+  let randomWord = '';
+
+  while (true) {
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      randomWord += characters[randomIndex];
+    }
+    if (globalIdList.includes(randomWord)) {
+      randomWord = '';
+      continue
+    }
+    break;
+  }
+
+  return randomWord;
+}
+
 
 
 // ==================
@@ -211,6 +232,11 @@ const card = {
     directory: { type: Object, required: true }
   },
   components: ['BreadCrumbs'],
+  computed: {
+    isProfileExist() {
+      return Object.keys(this.profile).length != 0;
+    }
+  },
   watch: {
     content: {
       immediate: true,
@@ -221,6 +247,7 @@ const card = {
         // Content to be modified
         let content = value
 
+        this.profile = {}
         // Extracts profile box content
         if (this.hasData(value)) {
           const rawsplit = value.split(this.divisor)
@@ -235,7 +262,12 @@ const card = {
         // Get tabs
         this.tabs = this.getTabs(content, this.directory)
 
+        
+
         await this.refresh()
+
+        this.fixQuote()
+        console.log(this.profile)
       }
     }
   },
@@ -282,12 +314,18 @@ const card = {
       
       return false;
     },
-    
-    
     async refresh() {
       this.rerender = false;
       await Vue.nextTick()
       this.rerender = true;
+    },
+    fixQuote() {
+      const blockquote = document.getElementById("card-content").getElementsByTagName("blockquote")
+      if (blockquote.length != 0) {
+        for (const quote of blockquote) {
+          quote.innerHTML = quote.innerHTML.replace(' - ', '<br> - ')
+        }
+      }
     }
   },
   template: `
@@ -298,7 +336,8 @@ const card = {
       
       <div class="card">
         <BreadCrumbs/>
-        <ProfileBox :profile="profile"/>
+
+        <ProfileBox :profile="profile" v-if="isProfileExist"/>
 
         <div id="card-content" v-if="rerender">
             <Tab :tabs="tabs"/>
@@ -312,63 +351,57 @@ const card = {
 
 const profilebox = {
   name: "ProfileBox",
-
   props: {
     profile: { type: Object }
   },
-  // watch: {
-  //   profile: {
-  //     immediate: true,
-  //     handler(value) {
-
-  //     }
-  //   }
-  // },
   template: `
     <div class="profilebox">
+      <!-- Title -->
+      <template v-if="profile.Title">
+        <span class="profile--title">
+          {{ profile.Title }}
+        </span>
+      </template>
 
-    <span class="profile--title">
-      {{ profile.Title }}
-    </span>
+      <!-- Image -->
+      <template v-if="profile.Image">
+          <Tab :tabs="profile.Image" type="image"/>      
+      </template>
 
-    <!-- Image -->
-    <template v-if="profile.Image">
-        <Tab :tabs="profile.Image" type="image"/>      
-    </template>
-
-    <!-- BODY  -->
-      <table>
-        <tbody>
-        <template v-for="(category_content, category) in profile.Content">
-          <!-- Category name -->
-          <tr class="category" v-if="category !== 'Desc'"> 
-            <td class="category--name" colspan="100%">{{ category }}</td>
-          </tr>
-          
-          <!-- Content -->
-          <template v-for="(entry_value, entry) in category_content">
-          <tr>
-            <td class="entry--name">{{entry}}</td>
-            <td>
-               <!-- If content is a list -->
-               <template v-if="Array.isArray(entry_value)">
-                <ul class="entry--value">
-                  <li v-for="(list_value, index) of entry_value" v-html="list_value"></li>      
-                </ul>
-              </template>
-              <!-- if content is simply a string -->
-              <template v-else>
-                <span class="entry--value" v-html="entry_value"></span>
-              </template>
-            </td>
-          </tr>
+      <template v-if="profile.Content">
+      <!-- Body  -->
+        <table>
+          <tbody>
+          <template v-for="(category_content, category) in profile.Content">
+            <!-- Category name -->
+            <tr class="category" v-if="category !== 'Desc'"> 
+              <td class="category--name" colspan="100%">{{ category }}</td>
+            </tr>
+            
+            <!-- Content -->
+            <template v-for="(entry_value, entry) in category_content">
+            <tr>
+              <td class="entry--name">{{entry}}</td>
+              <td>
+                 <!-- If content is a list -->
+                 <template v-if="Array.isArray(entry_value)">
+                  <ul class="entry--value">
+                    <li v-for="(list_value, index) of entry_value" v-html="list_value"></li>      
+                  </ul>
+                </template>
+                <!-- if content is simply a string -->
+                <template v-else>
+                  <span class="entry--value" v-html="entry_value"></span>
+                </template>
+              </td>
+            </tr>
+            </template>
           </template>
-        </template>
 
-        </tbody>
-      </table>
+          </tbody>
+        </table>
 
-
+      </template>
 
     </div>
   `
@@ -388,21 +421,12 @@ const tab = {
     btnClass: { type: String, default: '' }
   },
   mounted(){
-    this.groupclass = this.gen(6)
-    this.buttonclass = this.gen(6)
+    this.groupclass = makeid(6)
+    this.buttonclass = makeid(6)
 
   },
   methods: {
-    gen(length) {
-      const characters = 'abcdefghijklmnopqrstuvwxyz';
-      let randomWord = '';
-    
-      for (let i = 0; i < length; i++) {
-        const randomIndex = Math.floor(Math.random() * characters.length);
-        randomWord += characters[randomIndex];
-      }
-      return randomWord;
-    },
+
     toggleTab(name) {
       // Make target tab appear
       const targetTab = `${name}-${this.groupclass}-content`
@@ -429,7 +453,7 @@ const tab = {
 
   },
   template: `
-    <div>
+
       <div class="tab-buttons">
         <template v-for="(value, name, index) in tabs">
           <button v-if="Object.keys(tabs).length != 1"
@@ -444,7 +468,7 @@ const tab = {
       <template v-for="(value, name, index) in tabs">
         <template v-if="type === 'text'">
           <div :id="name + '-' + groupclass + '-content'"
-               :class="[groupclass, index == 0 ? '' : 'hide']"
+               :class="[groupclass, index == 0 ? '' : 'hide', 'tab']"
                v-html="value">
           </div>
         </template>
@@ -457,7 +481,7 @@ const tab = {
           
         </template>
       </template>
-    </div>
+
   `
 }
 
