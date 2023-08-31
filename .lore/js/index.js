@@ -203,6 +203,8 @@ function makeid(length) {
 
 
 
+
+
 // ==================
 //     Components 
 // ==================
@@ -255,19 +257,16 @@ const card = {
 
           // Sets into content the half without any profile box content
           content = rawsplit[2].trim()
-
-          console.log(this.profile)
         }
 
-        // Get tabs
+        // Get tabs and process content
         this.tabs = this.getTabs(content, this.directory)
 
         
-
         await this.refresh()
 
         this.fixQuote()
-        console.log(this.profile)
+        this.makeTOC()
       }
     }
   },
@@ -295,6 +294,7 @@ const card = {
           results[name] = marked.parse(results[name]);
           // convert custom components into html
           results[name] = autoLink(results[name], directory)
+
         }
       } else {
         // if there is no tabs
@@ -303,6 +303,34 @@ const card = {
       }
       return results;
     },
+    makeTOC() {
+      const tabs = document.getElementsByClassName("tab")
+      
+      for (const tab of tabs) {
+        if (!tab.innerHTML.includes("[[toc]]")) return
+        const headers = tab.querySelectorAll("h1, h2, h3, h4, h5, h6")
+        let toc = ""
+
+        for (const head of headers) {
+          head.id = head.innerText.replace(" ", "-").toLowerCase()
+          console.log(head.tagName)
+          toc += `<a class="button button--toc ${head.tagName}" href="#${head.id}">${head.innerText}</a>\n`
+        } 
+
+        document.getElementById(tab.id).innerHTML = tab.innerHTML.replace("[[toc]]", 
+        `<div class="toc">
+          <h1 class="toc-title">Table of Contents</h1>
+          ${toc}
+        </div>
+        `)
+
+
+
+         
+      }
+    },
+
+    // Check if There is a data for profiles inside
     hasData(value) {
       const equalsIndex1 = value.indexOf(this.divisor);
       const equalsIndex2 = value.lastIndexOf(this.divisor);
@@ -314,11 +342,7 @@ const card = {
       
       return false;
     },
-    async refresh() {
-      this.rerender = false;
-      await Vue.nextTick()
-      this.rerender = true;
-    },
+
     fixQuote() {
       const blockquote = document.getElementById("card-content").getElementsByTagName("blockquote")
       if (blockquote.length != 0) {
@@ -326,7 +350,12 @@ const card = {
           quote.innerHTML = quote.innerHTML.replace(' - ', '<br> - ')
         }
       }
-    }
+    },
+    async refresh() {
+      this.rerender = false;
+      await Vue.nextTick()
+      this.rerender = true;
+    },
   },
   template: `
     <div class="card-container">

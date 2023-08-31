@@ -43,3 +43,23 @@
     color: white;
   }
 }
+
+.button--toc {
+  // Block
+  padding: 1px 3px 1px 3px;
+  width: fit-content;
+  margin: 0px;
+  line-height: 16px;
+  border-radius: 3px;
+
+  // Element
+  color: $blue;
+  text-decoration: none;
+  font-weight: normal;
+
+  // Hover
+  &:hover {
+    // background-color: transparent;
+    // color: $blue;
+  }
+}

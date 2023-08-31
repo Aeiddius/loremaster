@@ -321,7 +321,7 @@ summary {
 .card-container {
   height: 100%;
   margin-top: 100px;
-  margin-bottom: 100px;
+  margin-bottom: 50px;
 }
 
 .card {
@@ -346,6 +346,39 @@ summary {
   font-family: Rubik Light !important;
 }
 
+.toc {
+  display: flex;
+  flex-direction: column;
+  max-width: 200px;
+  min-width: 150px;
+  width: -moz-fit-content;
+  width: fit-content;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: #F5F5F5;
+}
+.toc .toc-title {
+  font-weight: bold;
+  font-size: 14px;
+  text-align: center;
+  margin: 0px;
+}
+.toc .H2 {
+  margin-left: 1em;
+}
+.toc .H3 {
+  margin-left: 2em;
+}
+.toc .H4 {
+  margin-left: 3em;
+}
+.toc .H5 {
+  margin-left: 4em;
+}
+.toc .H6 {
+  margin-left: 5em;
+}
+
 #title {
   color: white;
   font-family: Rubik Light;
@@ -357,7 +390,7 @@ summary {
   min-height: 100px;
   width: 250px;
   border-radius: 10px;
-  padding: 5px;
+  padding: 8px;
   margin-left: 20px;
   background-color: #F5F5F5;
   font-size: 12px;
@@ -443,6 +476,17 @@ summary {
   color: white;
 }
 
+.button--toc {
+  padding: 1px 3px 1px 3px;
+  width: -moz-fit-content;
+  width: fit-content;
+  margin: 0px;
+  line-height: 16px;
+  border-radius: 3px;
+  color: #4584FF;
+  text-decoration: none;
+  font-weight: normal;
+}
 * {
   font-family: Rubik;
 }
@@ -455,6 +499,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: auto;
 }
 
 .full {
