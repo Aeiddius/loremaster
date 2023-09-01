@@ -22,15 +22,20 @@ $profile--width: 250px;
   background-color: $grey;
   font-size: $profile--font-size;
 
+  // Misc
+  transition: 0.5s linear;
+  @include shadow;
+
   // Children
   .tab-buttons {
     text-align: center;
   }
-
+  
   .profile--image {
     max-height: 500px;
     width: 100%;
     object-fit: contain;
+    transition: 0.5s linear;
   }
 
   .profile--title {
@@ -46,6 +51,7 @@ $profile--width: 250px;
     color: white;
     text-align: center;
     font-size: $title--font-size;
+
   }
 }
 
@@ -95,6 +101,24 @@ $profile--width: 250px;
     .profile--image {
       max-height: 350px;
     }
+
+    table {
+      width: 100%;
+    }
   }
 }
  
+
+@media screen and (max-width: 500px) {
+  .profilebox {
+    float: none;
+    width: 100%;
+    margin-left: 0px;
+    margin-bottom: 20px;
+    font-size: 12px;
+
+    .profile--image {
+      max-height: 500px;
+    }
+  }
+}
