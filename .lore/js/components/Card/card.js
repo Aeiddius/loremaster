@@ -73,9 +73,33 @@ const card = {
         // Parse data
         for (const name in results) {
           // Convert md into html
+          
+          results[name] = results[name]
+
+          const lists = value.match(/\*\s(.*)/gm)
+          for (let list of lists) {
+
+            
+           
+            let newList = "<div> • " + list.replace(/\*\s/, "") + "</div>"
+
+            const bolds = newList.match(/\*\*(.*?)\*\*/g);
+            for (let bold_index in bolds) {
+              const bold = bolds[bold_index]
+              newList = newList.replace(bold, "<b>" + bold.replace(/\*/gm, "") + "</b>")
+            }
+            
+            results[name] = results[name].replace(list, newList)
+          }
+
+          console.log( results[name])
+
           results[name] = marked.parse(results[name]);
+          results[name] = autoSpoil(results[name])
           // convert custom components into html
           results[name] = autoLink(results[name], directory)
+
+          
 
         }
       } else {

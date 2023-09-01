@@ -777,4 +777,12 @@ body::-webkit-scrollbar-thumb {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
+}
+
+.spoilers {
+  display: none;
+}
+
+.b {
+  font-weight: bold;
 }/*# sourceMappingURL=style.css.map */

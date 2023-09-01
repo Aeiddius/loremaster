@@ -62,24 +62,26 @@ He and his family are Desterian Immigrants who migrated to Arlika in order to se
 As a child, he always wanted to become a hero because of the stories that his mother told him. She taught in him the virtues of a Hero and what it means to be good. As a result, he grew up wanting to be one. He trained his abilities for most of his days and even going so far as becoming a vigilante with his best friend Kevin and Vanessa, albeit only fighting petty crimes like thievery, mugging, and bullying. But his motivation later became sinister when an accident led to him having to choose which one of his friend he had to sacrifice, followed by the destruction of the town they were in at the time, permanently scarring Ethan's mind and turning him into a sociopath.
 
 [[ethan-morales]]
-
-[[spoiler/]]
-
+ 
+[[/spoiler]]
+ 
 [[toc]]
 
 # Appearance
 Ethan is a Desterian Teenager. Like most Desterian, he has dark hair and light beige skin. His eyes are orange-red, inherited from his mother and he has a tall build, inherited from his dad. His eyebrows are thin like his mother and his nose is straight from his father's. His hair is kept slightly long, giving him a pair of bangs on his forehead.
 
 While Ethan is always seen wearing glasses, he does not have a bad eyesight. Rather, he wears his glasses as a convenient computer and to help enhance his ability. He does not like contact lens since he's too lazy to wear those.
-
+[[spoiler]]
 When not in school, he always wears a dark, baggy sweater and a pair of dark pants. When he goes outside, he wears a dark track suit with orange-red stripes.
-
+[[/spoiler]]
 # Personality
 Ethan was always encouraged by his father to be assertive and to take what is rightfully his. As a result, he grew up having a confident and proud personality. While initially peaceful, his bullying encounter with the then child Kevin caused Ethan to wake up his aggressive tendencies which he inherited from his mother. After years of battling and beating each other, Ethan ended up having a fearless, calculating, and aggressive personality, very much like that of Kevin.
 
 He grew up having a bright, cheerful, and smart personality. Because Ethan grew up in Desteria during the first six years of his life, his morality ended up getting influenced, causing him to have rebellious and cold tendencies. However, his parents has taught him well enough that Ethan grew up with a kind personality, always smiling and helping those in need.
 
+[[spoiler]]
 After the events with the Crawler, Ethan changed and became sociopathic. He became cold, cunning, hateful, and vengeful. The event broke him, causing him to lose a great deal of his empathy. After much consolation and love from his parents, a part of the Original Ethan returned back, however he was permanently changed. He changed into a mature and unsociable person, barely smiling and always living in his own world. It was only after living with [[E-Class]] did Ethan grew and retained his original personality back.
+[[/spoiler]]
 
 Inspired by the Elucid King, Ethan started studying Strange Social Laws and Scheming books, causing him to turn into a rather deceptive and highly opportunistic person.
 
@@ -99,13 +101,25 @@ But his motivation changed into a desire to murder the Villain that tortured him
 Because Ethan is a Ranker, he awakened many different forms of his ability.
 
 ## Active
-* **Candlefire** - The ability to create a small fire in one's palm. Currently, has grown so powerful it became black and simply utterly annihilates anything it touches, even the user.
+
+* **Candlefire** - The ability to create a small fire in one's palm. [[spoiler]]Currently, has grown so powerful it became black and simply utterly annihilates anything it touches, even the user.[[/spoiler]]
+
+[[spoiler]]
 * **Pyrokinesis** - The ability to manipulate flames
+
 * **Thermal Manipulation** - The ability to manipulate temperature.
+
 * **Kinetic Manipulation** - The ability to manipulate the kinetic energy of atoms allowing the user to use a telekinesis like power.
+
 * **Molecular Binding** - The ability to manipulate the energy between molecules and bind them together.
-* **Creation (Faux)** - The ability to rearrange atoms into molecules, which allows the creation of any physical object. While Ethan endorse he suddenly awakened to Creation, its actually just a technique of his under Atomic Manipulation
-* **Atomic Manipulation** - The Ability to manipulate Matter at the atomic level. The user can control atoms, the building blocks of matter. The user can manipulate matter on an atomic level, and the energy associated with it. They can manipulate atomic structures of matter to achieve a variety of
+[[/spoiler]]
+
+* **Creation** - The ability to rearrange atoms into molecules, which allows the creation of any physical object. [[spoiler]] While Ethan endorse he suddenly awakened to Creation, its actually just a technique of his under Atomic Manipulation[[/spoiler]]
+
+[[spoiler]]
+* **Atomic Manipulation** - The Ability to manipulate Matter at the atomic level. The user can control atoms, the building blocks of matter. The user can manipulate matter on an atomic level, and the energy associated with it. They can manipulate atomic structures of matter to achieve a variety of 
+[[/spoiler]]
+
 
 ## Passive
 * **Fire Immunity** - Much like his mother and little brother, Ethan is practically immune to all heat-based attacks and searing hot temperatures. The consequence of which is that Ethan never knew what heat feels like.

@@ -21,11 +21,8 @@ const sidebar = {
 
     const navs = (await resp.text()).trim().split("\n")
     for (const nav of navs) {
-      console.log(nav)
       this.navs[nav.replace(/\[\]/g, "")] = autoLink(nav, this.directory)
     }    
-
-    console.log(this.navs)
   },
   methods: {
     closeSidebar() {
