@@ -30,7 +30,7 @@
     },
 
     "librarium": {
-      "title": "Librarium Sanctum",
+      "title": "Librarium",
       "path": "content/librarium.md",
       "parent": ""
     }

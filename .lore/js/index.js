@@ -368,11 +368,24 @@ const card = {
   name: `Card`,
   data() {
     return {
-      tabs: {},
-      profile: {},
+      // Card Data
+      areas: {
+        spoiler: {
+          tabs: {},
+          profile: {}
+        },
+        preview: {
+          tabs: {},
+          profile: {}
+        },
+      },
+
+      // Misc
       rerender: true,
 
-      divisor: "========================================================"
+      // Divisors
+      profileDivisor: "=============================",
+      spoilerDivisor: "----------------------------------------------------------------------",
     }
   },
   props: {
@@ -381,11 +394,6 @@ const card = {
     directory: { type: Object, required: true }
   },
   components: ['BreadCrumbs'],
-  computed: {
-    isProfileExist() {
-      return Object.keys(this.profile).length != 0;
-    }
-  },
   watch: {
     content: {
       immediate: true,
@@ -393,25 +401,26 @@ const card = {
         // Return if value is empty
         if (value == '') return  
 
-        // Content to be modified
-        let content = value
-
+        // Refresh
         this.profile = {}
-        // Extracts profile box content
-        if (this.hasData(value)) {
-          const rawsplit = value.split(this.divisor)
-          this.profile = jsyaml.load(autoLink(rawsplit[1], this.directory), 'utf8');
 
-          // Sets into content the half without any profile box content
-          content = rawsplit[2].trim()
+        // Start
+        const [spoilerContents, previewContent] = value.split(this.spoilerDivisor).slice(0, 2);
+        
+        const areas = {
+          'spoiler': spoilerContents.trim(), 
+          'preview': previewContent == undefined ? "" : previewContent.trim()
         }
 
-        // Get tabs and process content
-        this.tabs = this.createContent(content, this.directory)
+        for (const area in areas) {
+          let [content, profile] = this.loadProfile(areas[area])
 
-        
+          this.areas[area].profile = profile
+          this.areas[area].tabs = this.createContent(content, this.directory)
+        }
+
+        // Refresh
         await this.refresh()
-
         this.fixQuote()
         this.makeTOC()
       }
@@ -421,7 +430,9 @@ const card = {
     createContent(value, directory) {
 
       const results = {};
-      if (value.includes("===")) {
+      const regex = /===(?!.*===)([^=]+)===/
+
+      if (regex.test(value)) {
         // Split text by "===", remove empty sections
         const sections = value.split("===").filter(section => section.trim() !== ""); 
       
@@ -438,34 +449,10 @@ const card = {
         // Parse data
         for (const name in results) {
           // Convert md into html
-          
-          results[name] = results[name]
-
-          const lists = value.match(/\*\s(.*)/gm)
-          for (let list of lists) {
-
-            
-           
-            let newList = "<div> • " + list.replace(/\*\s/, "") + "</div>"
-
-            const bolds = newList.match(/\*\*(.*?)\*\*/g);
-            for (let bold_index in bolds) {
-              const bold = bolds[bold_index]
-              newList = newList.replace(bold, "<b>" + bold.replace(/\*/gm, "") + "</b>")
-            }
-            
-            results[name] = results[name].replace(list, newList)
-          }
-
-          console.log( results[name])
-
           results[name] = marked.parse(results[name]);
-          results[name] = autoSpoil(results[name])
+
           // convert custom components into html
           results[name] = autoLink(results[name], directory)
-
-          
-
         }
       } else {
         // if there is no tabs
@@ -474,6 +461,26 @@ const card = {
       }
       return results;
     },
+    loadProfile(value) {
+      if (!this.hasData(value)) return [value, {}];
+      
+      // Separate content and profile
+      const parts = value.split(this.profileDivisor);
+      
+      // Load yaml
+      let profile = {};
+      try {
+        profile = jsyaml.load(autoLink(parts[1].replace(/=/g, "").trim(), this.directory), 'utf8');
+      } catch (error) {
+        console.log("Bad YAML Data on .md file");
+        return [value, {}];
+      }
+      
+      // Load content
+      const content = parts[2].trim();
+    
+      return [content, profile];
+   },
     makeTOC() {
       const tabs = document.getElementsByClassName("tab")
       
@@ -496,8 +503,8 @@ const card = {
     },
     // Check if There is a data for profiles inside
     hasData(value) {
-      const equalsIndex1 = value.indexOf(this.divisor);
-      const equalsIndex2 = value.lastIndexOf(this.divisor);
+      const equalsIndex1 = value.indexOf(this.profileDivisor);
+      const equalsIndex2 = value.lastIndexOf(this.profileDivisor);
       
       if (equalsIndex1 !== -1 && equalsIndex2 !== -1 && equalsIndex1 < equalsIndex2) {
           const textBetweenEquals = value.substring(equalsIndex1 + 1, equalsIndex2);
@@ -520,20 +527,32 @@ const card = {
       await Vue.nextTick()
       this.rerender = true;
     },
+    isProfileExist(area) {
+
+      return Object.keys(this.areas[area].profile).length != 0
+    }
   },
   template: `
     <div class="card-container">
       <h1 id="title">
-        {{ title }}
+        {{ title }} 
       </h1>
       
       <div class="card">
         <BreadCrumbs/>
 
-        <ProfileBox :profile="profile" v-if="isProfileExist"/>
+        <div v-for="(area, name, index) in areas"
+             v-if="rerender"
+             :id="name + '-area'"
+             :class="[name === 'preview' ? 'hide' : '']"
 
-        <div id="card-content" v-if="rerender">
-            <Tab :tabs="tabs"/>
+             >
+          <ProfileBox :profile="area.profile" v-if="isProfileExist(name)"/>
+        
+          <div id="card-content">
+              <Tab :tabs="area.tabs"/>
+          </div>
+
         </div>
 
       </div>
@@ -622,7 +641,7 @@ const sidebar = {
     isCurrentNav() {
       let pageId = (new URLSearchParams(window.location.search)).get('p')
       if (pageId == null || pageId == "") pageId = "home"
-      console.log(pageId)
+      // console.log(pageId)
       return pageId
       // return 'home'
     }
@@ -822,9 +841,16 @@ const tab = {
 const toggle = {
   name: "Toggle",
   props: {},
+  methods: {
+    toggleArea() {
+      console.log(true)
+      document.getElementById('spoiler-area').classList.toggle("hide")
+      document.getElementById('preview-area').classList.toggle("hide")
+    }
+  },
   template: `
     <span class="toggle">
-      <input type="checkbox" id="switch"/>
+      <input type="checkbox" id="switch" @click="toggleArea"/>
       <label for="switch">Toggle</label>
     </span>
   `
