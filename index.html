@@ -10,7 +10,7 @@
 
   <link rel="stylesheet" href="./.lore/css/style.css">
 
-
+  <link rel="icon" href="./assets/favicon.svg">
 </head> 
 
 <body onload="start()">
@@ -30,7 +30,8 @@
       <!-- Card component - All contents comes here -->
       <Card :title="pageName"
             :content="content"
-            :directory="directory"/>      
+            :directory="directory"
+            :toggle-state="toggleState"/>      
     </div>
   </div>
 

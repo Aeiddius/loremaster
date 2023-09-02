@@ -1,7 +1,10 @@
 
 var root; //
+
+
 var historyList = [];
 var globalPosition = null;
+
 
 function start() { 
   const app = Vue.createApp({
@@ -9,6 +12,7 @@ function start() {
       return {
         directory: {},
         rerender: true,
+        toggleState: false,
 
         // Sidebar
         projectTitle: "",
@@ -27,6 +31,7 @@ function start() {
       // Save key-info
       this.projectTitle = metadata.title;
       this.projectSubtitle = metadata.subtitle;
+      document.getElementsByTagName("title")[0].innerText = this.projectTitle;
 
       // Get Directory
       this.directory = metadata.directory
@@ -91,9 +96,9 @@ function start() {
         
         
         // Update App
-        this.rerender = false;
-        await Vue.nextTick()
-        this.rerender = true;
+        // this.rerender = false;
+        // await Vue.nextTick()
+        // this.rerender = true;
         
         this.$forceUpdate();
       },
@@ -382,6 +387,7 @@ const card = {
 
       // Misc
       rerender: true,
+      noPreview: false,
 
       // Divisors
       profileDivisor: "=============================",
@@ -391,7 +397,8 @@ const card = {
   props: {
     title: { type: String, default: "Ethan Morales" },
     content: { type: String },
-    directory: { type: Object, required: true }
+    directory: { type: Object, required: true },
+    toggleState: { type: Boolean }
   },
   components: ['BreadCrumbs'],
   watch: {
@@ -406,7 +413,10 @@ const card = {
 
         // Start
         const [spoilerContents, previewContent] = value.split(this.spoilerDivisor).slice(0, 2);
-        
+
+        // Checks if there is no preview
+        if (previewContent == undefined) this.noPreview = true
+  
         const areas = {
           'spoiler': spoilerContents.trim(), 
           'preview': previewContent == undefined ? "" : previewContent.trim()
@@ -423,6 +433,12 @@ const card = {
         await this.refresh()
         this.fixQuote()
         this.makeTOC()
+        this.toggleArea()
+      }
+    },
+    toggleState: {
+      handler(value) {
+        this.toggleArea()
       }
     }
   },
@@ -528,8 +544,19 @@ const card = {
       this.rerender = true;
     },
     isProfileExist(area) {
-
       return Object.keys(this.areas[area].profile).length != 0
+    },
+    toggleArea() {
+      const spoilerArea = document.getElementById("spoiler-area");
+      const previewArea = document.getElementById("preview-area");
+      
+      if (this.noPreview || this.toggleState) {
+        spoilerArea.classList.remove("hide");
+        previewArea.classList.add("hide");
+      } else {
+        spoilerArea.classList.add("hide");
+        previewArea.classList.remove("hide");
+      }
     }
   },
   template: `
@@ -544,21 +571,17 @@ const card = {
         <div v-for="(area, name, index) in areas"
              v-if="rerender"
              :id="name + '-area'"
-             :class="[name === 'preview' ? 'hide' : '']"
-
              >
           <ProfileBox :profile="area.profile" v-if="isProfileExist(name)"/>
         
           <div id="card-content">
               <Tab :tabs="area.tabs"/>
           </div>
-
         </div>
 
       </div>
     </div>
   ` 
-
 }
 
 const profilebox = {
@@ -667,16 +690,17 @@ const sidebar = {
           const newnav = nav.replace(/\[\]/g, "").trim()
           if (newnav == "") continue;
           
+          // if has subnav
           if (newnav.startsWith("- ")) {
             this.navs[lastNav]['subnav'][newnav] = autoLink(nav, this.directory)
             continue
           }
-    
+          
+          // if No subnav
           this.navs[newnav] = {
             main: autoLink(nav, this.directory),
             subnav: {}
           }
-     
           lastNav = newnav
         }    
       }
@@ -706,7 +730,7 @@ const sidebar = {
 
     <!-- Search Box -->
     <div class="inputs">
-    <Searchbox/> <Toggle/>
+    <Searchbox/> <Toggle :projectTitle="projectTitle"/>
     </div>
     
     <!-- Navigation Links -->
@@ -840,12 +864,39 @@ const tab = {
 
 const toggle = {
   name: "Toggle",
-  props: {},
+  data() {
+    return {
+      uniqueId: ""
+    }
+  },
+  props: {
+    projectTitle: { type: String, required: true }
+  },
+  watch: {
+    projectTitle: {
+      handler(value) {
+        this.uniqueId = this.projectTitle.toLowerCase().trim().replace(/\s/g, "-")+"-storage"
+
+        if (localStorage.getItem(this.uniqueId) === null) {
+          localStorage.setItem(this.uniqueId, "false");
+        } 
+        // localStorage.setItem(this.uniqueId, "false");
+        const toggleState = localStorage.getItem(this.uniqueId)
+        document.getElementById("switch").checked = toggleState === "true" ? true : false
+
+        root.toggleState = document.getElementById("switch").checked
+        
+      }
+    }
+  },
   methods: {
     toggleArea() {
-      console.log(true)
-      document.getElementById('spoiler-area').classList.toggle("hide")
-      document.getElementById('preview-area').classList.toggle("hide")
+      
+      const toggleState = document.getElementById("switch").checked
+      localStorage.setItem(this.uniqueId, toggleState);
+      root.toggleState = toggleState
+      console.log(root.toggleState)
+
     }
   },
   template: `

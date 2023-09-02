@@ -1,6 +1,9 @@
 var root; //
+
+
 var historyList = [];
 var globalPosition = null;
+
 
 function start() { 
   const app = Vue.createApp({
@@ -8,6 +11,7 @@ function start() {
       return {
         directory: {},
         rerender: true,
+        toggleState: false,
 
         // Sidebar
         projectTitle: "",
@@ -26,6 +30,7 @@ function start() {
       // Save key-info
       this.projectTitle = metadata.title;
       this.projectSubtitle = metadata.subtitle;
+      document.getElementsByTagName("title")[0].innerText = this.projectTitle;
 
       // Get Directory
       this.directory = metadata.directory
@@ -90,9 +95,9 @@ function start() {
         
         
         // Update App
-        this.rerender = false;
-        await Vue.nextTick()
-        this.rerender = true;
+        // this.rerender = false;
+        // await Vue.nextTick()
+        // this.rerender = true;
         
         this.$forceUpdate();
       },

@@ -40,6 +40,7 @@
   margin: 0px;
   margin-bottom: 10px;
   font-size: 3em;
+  font-family: Cambria !important;
 }
 
 .card-content {
@@ -131,15 +132,15 @@
     width: 90vw;
     padding: 20px;
   }
-  #title {
-    text-align: center;
-    
-  transition: 0.4s linear;
-  }
+
 }
  
 @media screen and (max-width: 500px) {
   .card {
     width: 100vw;
+  }
+  #title {
+    text-align: center;
+    transition: 0.4s linear;
   }
 }

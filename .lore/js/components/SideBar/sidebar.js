@@ -37,16 +37,17 @@ const sidebar = {
           const newnav = nav.replace(/\[\]/g, "").trim()
           if (newnav == "") continue;
           
+          // if has subnav
           if (newnav.startsWith("- ")) {
             this.navs[lastNav]['subnav'][newnav] = autoLink(nav, this.directory)
             continue
           }
-    
+          
+          // if No subnav
           this.navs[newnav] = {
             main: autoLink(nav, this.directory),
             subnav: {}
           }
-     
           lastNav = newnav
         }    
       }
@@ -76,7 +77,7 @@ const sidebar = {
 
     <!-- Search Box -->
     <div class="inputs">
-    <Searchbox/> <Toggle/>
+    <Searchbox/> <Toggle :projectTitle="projectTitle"/>
     </div>
     
     <!-- Navigation Links -->

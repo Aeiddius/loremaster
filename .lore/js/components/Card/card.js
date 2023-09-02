@@ -17,6 +17,7 @@ const card = {
 
       // Misc
       rerender: true,
+      noPreview: false,
 
       // Divisors
       profileDivisor: "=============================",
@@ -26,7 +27,8 @@ const card = {
   props: {
     title: { type: String, default: "Ethan Morales" },
     content: { type: String },
-    directory: { type: Object, required: true }
+    directory: { type: Object, required: true },
+    toggleState: { type: Boolean }
   },
   components: ['BreadCrumbs'],
   watch: {
@@ -41,7 +43,10 @@ const card = {
 
         // Start
         const [spoilerContents, previewContent] = value.split(this.spoilerDivisor).slice(0, 2);
-        
+
+        // Checks if there is no preview
+        if (previewContent == undefined) this.noPreview = true
+  
         const areas = {
           'spoiler': spoilerContents.trim(), 
           'preview': previewContent == undefined ? "" : previewContent.trim()
@@ -58,6 +63,12 @@ const card = {
         await this.refresh()
         this.fixQuote()
         this.makeTOC()
+        this.toggleArea()
+      }
+    },
+    toggleState: {
+      handler(value) {
+        this.toggleArea()
       }
     }
   },
@@ -163,8 +174,19 @@ const card = {
       this.rerender = true;
     },
     isProfileExist(area) {
-
       return Object.keys(this.areas[area].profile).length != 0
+    },
+    toggleArea() {
+      const spoilerArea = document.getElementById("spoiler-area");
+      const previewArea = document.getElementById("preview-area");
+      
+      if (this.noPreview || this.toggleState) {
+        spoilerArea.classList.remove("hide");
+        previewArea.classList.add("hide");
+      } else {
+        spoilerArea.classList.add("hide");
+        previewArea.classList.remove("hide");
+      }
     }
   },
   template: `
@@ -179,19 +201,15 @@ const card = {
         <div v-for="(area, name, index) in areas"
              v-if="rerender"
              :id="name + '-area'"
-             :class="[name === 'preview' ? 'hide' : '']"
-
              >
           <ProfileBox :profile="area.profile" v-if="isProfileExist(name)"/>
         
           <div id="card-content">
               <Tab :tabs="area.tabs"/>
           </div>
-
         </div>
 
       </div>
     </div>
   ` 
-
 }
