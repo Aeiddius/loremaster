@@ -7,6 +7,7 @@ function start() {
     data() {
       return {
         directory: {},
+        rerender: true,
 
         // Sidebar
         projectTitle: "",
@@ -87,7 +88,12 @@ function start() {
           this.content = this.content + `\n\nPage <span class="error">${pageId}</span> does not exist.`
         }
         
+        
         // Update App
+        this.rerender = false;
+        await Vue.nextTick()
+        this.rerender = true;
+        
         this.$forceUpdate();
       },
       getCurrentPageId() {
