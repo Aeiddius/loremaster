@@ -45,7 +45,6 @@ function start() {
 
       // Setup forward and backward handler using johanholmerin's code
       window.addEventListener('forward', event => {
-
         if (globalPosition+1 < historyList.length) globalPosition++
         this.reload(historyList[globalPosition], true)
         console.log(event)
@@ -56,6 +55,8 @@ function start() {
         this.reload(historyList[globalPosition], true)
         console.log(event)
       });
+
+      setup()
 
     },
     methods: {
@@ -112,3 +113,20 @@ function start() {
 
 }
 
+
+function setup() {
+
+  // source: https://css-tricks.com/snippets/jquery/smooth-scrolling/
+  window.scroll({
+    top: 2500, 
+    left: 0, 
+    behavior: 'smooth'
+  });
+  
+  // Scroll certain amounts from current position 
+  window.scrollBy({ 
+    top: 100, // could be negative value
+    left: 0, 
+    behavior: 'smooth' 
+  });
+}

@@ -46,7 +46,6 @@ function start() {
 
       // Setup forward and backward handler using johanholmerin's code
       window.addEventListener('forward', event => {
-
         if (globalPosition+1 < historyList.length) globalPosition++
         this.reload(historyList[globalPosition], true)
         console.log(event)
@@ -57,6 +56,8 @@ function start() {
         this.reload(historyList[globalPosition], true)
         console.log(event)
       });
+
+      setup()
 
     },
     methods: {
@@ -111,6 +112,24 @@ function start() {
   root = mount(app)
 
 
+}
+
+
+function setup() {
+
+  // source: https://css-tricks.com/snippets/jquery/smooth-scrolling/
+  window.scroll({
+    top: 2500, 
+    left: 0, 
+    behavior: 'smooth'
+  });
+  
+  // Scroll certain amounts from current position 
+  window.scrollBy({ 
+    top: 100, // could be negative value
+    left: 0, 
+    behavior: 'smooth' 
+  });
 }
 
 function mount(app) {
@@ -642,12 +661,73 @@ const profilebox = {
   `
 }
 
+var pages = []
+
+const gotoPage = (pageId) => {
+  document.getElementById("searchbox").value  = ''
+
+  document.getElementById("suggestions").innerHTML = ''
+  changePage(pageId)
+
+}
+
 const searchbox = {
   name: "Searchbox",
-  props: {},
+  data() {
+    return {
+      pages: []
+    }
+  },
+  props: {
+    directory: { type: Object, required: true },
+  },
+  watch: {
+    directory: {
+      handler(value) {
+
+
+        for (const entry in value) {
+          const item = value[entry].title
+          pages.push({name: item, pageId: entry})
+        }
+
+        const searchbox = document.getElementById("searchbox")
+        searchbox.addEventListener("keydown", function(e) {
+          const val = e.target.value
+          const sugs = document.getElementById("suggestions")
+          
+
+          let suggestedList = []
+
+          for (const entry of pages) {
+            if (entry.name.toLowerCase().includes(val.toLowerCase().trim())) {
+              suggestedList.push(entry)
+            }
+          } 
+
+          sugs.innerHTML = ''
+
+          for (const item of suggestedList) {
+            sugs.insertAdjacentHTML('beforeend', `
+            <div class="suggestion-item" onclick="gotoPage('${item.pageId}')">
+              ${item.name}
+            </div>
+          `);
+          }
+          
+        })
+      }
+    }
+  },
   template: `
-    <input type="text" placeholder="Search.."
-           class="searchbox">
+    <div class="searchbox-area">
+      <input type="text" placeholder="Search.."
+             class="searchbox"
+             id="searchbox">
+      <div id="suggestions"></div>
+    </div>
+
+     
   `
 }
 
@@ -730,7 +810,7 @@ const sidebar = {
 
     <!-- Search Box -->
     <div class="inputs">
-    <Searchbox/> <Toggle :projectTitle="projectTitle"/>
+    <Searchbox :directory="directory"/> <Toggle :projectTitle="projectTitle"/>
     </div>
     
     <!-- Navigation Links -->

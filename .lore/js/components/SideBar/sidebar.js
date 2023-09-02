@@ -77,7 +77,7 @@ const sidebar = {
 
     <!-- Search Box -->
     <div class="inputs">
-    <Searchbox/> <Toggle :projectTitle="projectTitle"/>
+    <Searchbox :directory="directory"/> <Toggle :projectTitle="projectTitle"/>
     </div>
     
     <!-- Navigation Links -->

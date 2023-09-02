@@ -348,6 +348,7 @@ summary {
   margin: 0px;
   margin-bottom: 10px;
   font-size: 3em;
+  font-family: Cambria !important;
 }
 
 .card-content {
@@ -415,14 +416,14 @@ summary {
     width: 90vw;
     padding: 20px;
   }
-  #title {
-    text-align: center;
-    transition: 0.4s linear;
-  }
 }
 @media screen and (max-width: 500px) {
   .card {
     width: 100vw;
+  }
+  #title {
+    text-align: center;
+    transition: 0.4s linear;
   }
 }
 .profilebox {
@@ -515,7 +516,6 @@ summary {
   border-radius: 4px;
   border: none;
   padding: 5px;
-  margin-right: 5px;
   background-color: #252525;
   color: white;
   font-size: 12px;
@@ -523,6 +523,29 @@ summary {
 }
 .searchbox:focus {
   outline: none;
+}
+
+.searchbox-area {
+  margin-right: 5px;
+}
+
+#suggestions {
+  position: absolute;
+  background-color: #4584FF;
+  width: 62%;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.suggestion-item {
+  padding: 5px;
+  border-top: 2px solid #191919;
+  font-size: 13px;
+  cursor: pointer;
+}
+.suggestion-item:hover {
+  border-top: 2px solid #4584FF;
+  background-color: #252525;
 }
 
 .sidebar {
@@ -570,7 +593,7 @@ summary {
 }
 .nav-links .button--showsub {
   float: right;
-  color: white;
+  color: rgba(255, 255, 255, 0.2666666667);
   transition: 0.2s ease-in-out;
   transform: scale(1);
   -webkit-user-select: none;
@@ -625,10 +648,9 @@ summary {
   transform: scale(0.9);
 }
 
-@media screen and (max-width: 1200px) {
+@media screen and (max-width: 1000px) {
   .sidebar {
     left: 10px;
-    top: -5000px;
     background-color: rgba(25, 25, 25, 0.98);
     box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
   }
@@ -761,6 +783,10 @@ summary {
   font-family: Rubik;
 }
 
+*, html {
+  scroll-behavior: smooth !important;
+}
+
 html {
   overflow-x: hidden;
   margin-right: calc(-1 * (100vw - 100%));
@@ -803,12 +829,4 @@ body::-webkit-scrollbar-thumb {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
-}
-
-.spoilers {
-  display: none;
-}
-
-.b {
-  font-weight: bold;
 }/*# sourceMappingURL=style.css.map */
