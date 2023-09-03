@@ -115,7 +115,6 @@ function start() {
 
 
 function setup() {
-
   // source: https://css-tricks.com/snippets/jquery/smooth-scrolling/
   window.scroll({
     top: 2500, 

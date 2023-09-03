@@ -434,6 +434,7 @@ summary {
   border-radius: 10px;
   padding: 8px;
   margin-left: 20px;
+  margin-bottom: 10px;
   background-color: #F5F5F5;
   font-size: 12px;
   transition: 0.5s linear;
@@ -510,6 +511,9 @@ summary {
   .profilebox .profile--image {
     max-height: 500px;
   }
+  .profilebox .category--name {
+    padding: 4px;
+  }
 }
 .searchbox {
   width: 100%;
@@ -542,6 +546,7 @@ summary {
   border-top: 2px solid #191919;
   font-size: 13px;
   cursor: pointer;
+  transition: 0.1s ease-in;
 }
 .suggestion-item:hover {
   border-top: 2px solid #4584FF;

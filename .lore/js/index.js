@@ -116,7 +116,6 @@ function start() {
 
 
 function setup() {
-
   // source: https://css-tricks.com/snippets/jquery/smooth-scrolling/
   window.scroll({
     top: 2500, 
@@ -427,6 +426,8 @@ const card = {
         // Return if value is empty
         if (value == '') return  
 
+        
+
         // Refresh
         this.profile = {}
 
@@ -434,8 +435,11 @@ const card = {
         const [spoilerContents, previewContent] = value.split(this.spoilerDivisor).slice(0, 2);
 
         // Checks if there is no preview
-        if (previewContent == undefined) this.noPreview = true
-  
+        if (previewContent == undefined ) {
+          this.noPreview = true;
+        } else {
+          this.noPreview = false;
+        }
         const areas = {
           'spoiler': spoilerContents.trim(), 
           'preview': previewContent == undefined ? "" : previewContent.trim()
@@ -457,6 +461,7 @@ const card = {
     },
     toggleState: {
       handler(value) {
+        
         this.toggleArea()
       }
     }
@@ -671,6 +676,11 @@ const gotoPage = (pageId) => {
 
 }
 
+const removeSuggestions = () => {
+  // document.getElementById("suggestions").innerHTML = ''
+
+}
+
 const searchbox = {
   name: "Searchbox",
   data() {
@@ -723,7 +733,7 @@ const searchbox = {
     <div class="searchbox-area">
       <input type="text" placeholder="Search.."
              class="searchbox"
-             id="searchbox">
+             id="searchbox" onfocusout="removeSuggestions()">
       <div id="suggestions"></div>
     </div>
 

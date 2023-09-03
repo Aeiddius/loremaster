@@ -38,6 +38,8 @@ const card = {
         // Return if value is empty
         if (value == '') return  
 
+        
+
         // Refresh
         this.profile = {}
 
@@ -45,8 +47,11 @@ const card = {
         const [spoilerContents, previewContent] = value.split(this.spoilerDivisor).slice(0, 2);
 
         // Checks if there is no preview
-        if (previewContent == undefined) this.noPreview = true
-  
+        if (previewContent == undefined ) {
+          this.noPreview = true;
+        } else {
+          this.noPreview = false;
+        }
         const areas = {
           'spoiler': spoilerContents.trim(), 
           'preview': previewContent == undefined ? "" : previewContent.trim()
@@ -68,6 +73,7 @@ const card = {
     },
     toggleState: {
       handler(value) {
+        
         this.toggleArea()
       }
     }

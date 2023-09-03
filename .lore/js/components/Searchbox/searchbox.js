@@ -8,6 +8,11 @@ const gotoPage = (pageId) => {
 
 }
 
+const removeSuggestions = () => {
+  // document.getElementById("suggestions").innerHTML = ''
+
+}
+
 const searchbox = {
   name: "Searchbox",
   data() {
@@ -60,7 +65,7 @@ const searchbox = {
     <div class="searchbox-area">
       <input type="text" placeholder="Search.."
              class="searchbox"
-             id="searchbox">
+             id="searchbox" onfocusout="removeSuggestions()">
       <div id="suggestions"></div>
     </div>
 
