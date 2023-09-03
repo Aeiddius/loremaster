@@ -61,46 +61,41 @@ function start() {
 
     },
     methods: {
-      async reload(pageId, isPopState=false) {
-        // Prevents repeated history when same page button is clicked
-        if (isPopState == false && pageId == historyList[globalPosition]) return
+      async reload(pageId, isPopState = false) {
+        // Prevents repeated history when the same page button is clicked
+        if (!isPopState && pageId === historyList[globalPosition]) return;
+      
         // Deal with Global Positioning
-        if (globalPosition == null) globalPosition = 0
-        else if(!isPopState) globalPosition += 1
-        
+        if (globalPosition === null) globalPosition = 0;
+        else if (!isPopState) globalPosition += 1;
+      
         // Clear history before the latest new page
-        if (isPopState == false && globalPosition >= 0 && globalPosition < historyList.length) {
-          // console.log("before: ", isPopState, historyList, globalPosition);
-          historyList.length = globalPosition
-          // console.log("after: ", isPopState, historyList, globalPosition);
+        if (!isPopState && globalPosition >= 0 && globalPosition < historyList.length) {
+          historyList.length = globalPosition;
         }
-
-        if (isPopState == false) historyList.push(pageId)
-        // console.log("gistory: ", historyList, globalPosition, pageId)
-         
-
-        // Get metadata file 
-        let isError = false
-        let pageMeta = this.directory[pageId];
-        if (!this.directory.hasOwnProperty(pageId)) {
-          pageMeta = this.directory["404"];
-          isError = true;
-        }
-
+      
+        if (!isPopState) historyList.push(pageId);
+      
+        // Get metadata file
+        let isError = false;
+        let pageMeta = this.directory[pageId] || this.directory["404"];
+        if (!this.directory.hasOwnProperty(pageId)) isError = true;
+      
         // Update Card Content
-        this.content = await (await fetch(pageMeta.path)).text() 
-        this.pageName = pageMeta.title
-
-        if (isError == true) {
-          this.content = this.content + `\n\nPage <span class="error">${pageId}</span> does not exist.`
+        const resp = await fetch(pageMeta.path);
+        this.pageName = pageMeta.title;
+      
+        if (resp.status === 404) {
+          this.content = `File <span class="error">${pageId}</span> is registered in metadata.json but does not exist`;
+        } else {
+          this.content = (await resp.text()).trim() || "The Page is empty";
         }
-        
-        
+      
+        if (isError) {
+          this.content += `\n\nPage <span class="error">${pageId}</span> does not exist.`;
+        }
+      
         // Update App
-        // this.rerender = false;
-        // await Vue.nextTick()
-        // this.rerender = true;
-        
         this.$forceUpdate();
       },
       getCurrentPageId() {
@@ -136,6 +131,7 @@ function mount(app) {
   const components = [
     breadcrumbs,
     card,
+    modal,
     profilebox,
     searchbox,
     sidebar,
@@ -194,7 +190,7 @@ function autoLink(value, directory) {
     // If normal [[name]]
     matches.push({
       title: match[1].trim(),
-      pageId: match[1].trim().toLowerCase().replace(" ", "-"),
+      pageId: match[1].trim().toLowerCase().replace(/\s/gm, "-"),
       original_string: match[1].trim(),
       is_custom: false,
     });
@@ -426,8 +422,6 @@ const card = {
         // Return if value is empty
         if (value == '') return  
 
-        
-
         // Refresh
         this.profile = {}
 
@@ -435,11 +429,12 @@ const card = {
         const [spoilerContents, previewContent] = value.split(this.spoilerDivisor).slice(0, 2);
 
         // Checks if there is no preview
-        if (previewContent == undefined ) {
+        if (previewContent == undefined || previewContent.trim().length == 0 ) {
           this.noPreview = true;
         } else {
           this.noPreview = false;
         }
+
         const areas = {
           'spoiler': spoilerContents.trim(), 
           'preview': previewContent == undefined ? "" : previewContent.trim()
@@ -489,14 +484,17 @@ const card = {
         // Parse data
         for (const name in results) {
           // Convert md into html
+          results[name] = results[name].replace(/\n/gm, "\n\n")
           results[name] = marked.parse(results[name]);
 
           // convert custom components into html
           results[name] = autoLink(results[name], directory)
+
+          
         }
       } else {
         // if there is no tabs
-        results["default"] = marked.parse(value);
+        results["default"] = marked.parse(value.replace(/\n/gm, "\n\n"));
         results["default"] = autoLink(results["default"], directory)
       }
       return results;
@@ -606,6 +604,12 @@ const card = {
       </div>
     </div>
   ` 
+}
+
+const modal = {
+  name: "Modal",
+  props: {},
+  template: ``
 }
 
 const profilebox = {
@@ -782,7 +786,7 @@ const sidebar = {
           
           // if has subnav
           if (newnav.startsWith("- ")) {
-            this.navs[lastNav]['subnav'][newnav] = autoLink(nav, this.directory)
+            this.navs[lastNav]['subnav'][newnav] = autoLink(nav.replace(/\-\s/, ''), this.directory)
             continue
           }
           
@@ -802,7 +806,7 @@ const sidebar = {
       document.getElementById("sidebaropen").style.display = "block";
     },
     toggleSubNav(navid) {
-      document.getElementById(navid).classList.toggle("hide")
+      document.getElementById(navid).classList.toggle("hide-subnav")
     },
     getNameClean(name) {
       return name.replace(/\[/g, "").replace(/\]/g, "").trim().toLowerCase()
@@ -838,7 +842,7 @@ const sidebar = {
           
           <!-- Sub button -->
           <div v-if="Object.keys(value.subnav).length != 0"
-               class="button--subnav hide"
+               class="button--subnav hide-subnav"
                :id="name + '-navid'">
 
             <template v-for="(valuesub, namesub, indexsub) in value.subnav">

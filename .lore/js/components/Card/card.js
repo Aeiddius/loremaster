@@ -38,8 +38,6 @@ const card = {
         // Return if value is empty
         if (value == '') return  
 
-        
-
         // Refresh
         this.profile = {}
 
@@ -47,11 +45,12 @@ const card = {
         const [spoilerContents, previewContent] = value.split(this.spoilerDivisor).slice(0, 2);
 
         // Checks if there is no preview
-        if (previewContent == undefined ) {
+        if (previewContent == undefined || previewContent.trim().length == 0 ) {
           this.noPreview = true;
         } else {
           this.noPreview = false;
         }
+
         const areas = {
           'spoiler': spoilerContents.trim(), 
           'preview': previewContent == undefined ? "" : previewContent.trim()
@@ -101,14 +100,17 @@ const card = {
         // Parse data
         for (const name in results) {
           // Convert md into html
+          results[name] = results[name].replace(/\n/gm, "\n\n")
           results[name] = marked.parse(results[name]);
 
           // convert custom components into html
           results[name] = autoLink(results[name], directory)
+
+          
         }
       } else {
         // if there is no tabs
-        results["default"] = marked.parse(value);
+        results["default"] = marked.parse(value.replace(/\n/gm, "\n\n"));
         results["default"] = autoLink(results["default"], directory)
       }
       return results;

@@ -343,16 +343,19 @@ summary {
   padding-left: 30px;
   margin-left: 10px;
 }
+.card p {
+  margin: 0px !important;
+  margin-bottom: 10px !important;
+}
+.card .button {
+  margin: 0px !important;
+}
 
 #title {
   margin: 0px;
   margin-bottom: 10px;
-  font-size: 3em;
+  font-size: 2.5em;
   font-family: Cambria !important;
-}
-
-.card-content {
-  font-family: Rubik Light !important;
 }
 
 .toc {
@@ -559,6 +562,7 @@ summary {
   left: 80px;
   width: 220px;
   height: 90vh;
+  min-height: 400px;
   padding: 20px;
   padding-top: 10px;
   border-radius: 20px;
@@ -613,7 +617,7 @@ summary {
 }
 .nav-links .button--mainnav .button {
   background-color: transparent;
-  color: white;
+  text-align: left;
   transition: 0.1s linear;
 }
 .nav-links .button--mainnav .button:hover {
@@ -621,10 +625,16 @@ summary {
   color: #4584FF;
   transform: scale(1.1);
 }
+.nav-links .button--mainnav .button--autolink {
+  color: white;
+}
 .nav-links .button--subnav {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 15px;
   margin-left: 10px;
+}
+.nav-links .hide-subnav {
+  display: none;
 }
 .nav-links .button--active .button {
   color: #4584FF !important;
@@ -656,6 +666,7 @@ summary {
 @media screen and (max-width: 1000px) {
   .sidebar {
     left: 10px;
+    top: -5000px;
     background-color: rgba(25, 25, 25, 0.98);
     box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
   }

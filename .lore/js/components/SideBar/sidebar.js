@@ -39,7 +39,7 @@ const sidebar = {
           
           // if has subnav
           if (newnav.startsWith("- ")) {
-            this.navs[lastNav]['subnav'][newnav] = autoLink(nav, this.directory)
+            this.navs[lastNav]['subnav'][newnav] = autoLink(nav.replace(/\-\s/, ''), this.directory)
             continue
           }
           
@@ -59,7 +59,7 @@ const sidebar = {
       document.getElementById("sidebaropen").style.display = "block";
     },
     toggleSubNav(navid) {
-      document.getElementById(navid).classList.toggle("hide")
+      document.getElementById(navid).classList.toggle("hide-subnav")
     },
     getNameClean(name) {
       return name.replace(/\[/g, "").replace(/\]/g, "").trim().toLowerCase()
@@ -95,7 +95,7 @@ const sidebar = {
           
           <!-- Sub button -->
           <div v-if="Object.keys(value.subnav).length != 0"
-               class="button--subnav hide"
+               class="button--subnav hide-subnav"
                :id="name + '-navid'">
 
             <template v-for="(valuesub, namesub, indexsub) in value.subnav">
