@@ -5,7 +5,7 @@ const card = {
     return {
       // Card Data
       areas: {
-        spoiler: {
+        full: {
           tabs: {},
           profile: {}
         },
@@ -21,9 +21,10 @@ const card = {
 
       // Divisors
       profileDivisor: "=============================",
-      spoilerDivisor: "----------------------------------------------------------------------",
+      fullDivisor: "----------------------------------------------------------------------",
     }
   },
+  emits: ['processed-content'],
   props: {
     title: { type: String, default: "Ethan Morales" },
     content: { type: String },
@@ -42,7 +43,7 @@ const card = {
         this.profile = {}
 
         // Start
-        const [spoilerContents, previewContent] = value.split(this.spoilerDivisor).slice(0, 2);
+        const [fullContents, previewContent] = value.split(this.fullDivisor).slice(0, 2);
 
         // Checks if there is no preview
         if (previewContent == undefined || previewContent.trim().length == 0 ) {
@@ -52,7 +53,7 @@ const card = {
         }
 
         const areas = {
-          'spoiler': spoilerContents.trim(), 
+          'full': fullContents.trim(), 
           'preview': previewContent == undefined ? "" : previewContent.trim()
         }
 
@@ -60,7 +61,9 @@ const card = {
           let [content, profile] = this.loadProfile(areas[area])
 
           this.areas[area].profile = profile
-          this.areas[area].tabs = this.createContent(content, this.directory)
+          const [tabs, tabsOriginal] = this.createContent(content, this.directory)
+          this.areas[area].tabs = tabs
+          this.areas[area].original = tabsOriginal
         }
 
         // Refresh
@@ -68,6 +71,8 @@ const card = {
         this.fixQuote()
         this.makeTOC()
         this.toggleArea()
+
+        this.$emit('processed-content', this.areas)
       }
     },
     toggleState: {
@@ -80,7 +85,8 @@ const card = {
   methods: {
     createContent(value, directory) {
 
-      const results = {};
+      let results = {};
+      let original = {}
       const regex = /===(?!.*===)([^=]+)===/
 
       if (regex.test(value)) {
@@ -100,6 +106,7 @@ const card = {
         // Parse data
         for (const name in results) {
           // Convert md into html
+          original[name] = results[name].trim()
           results[name] = results[name].replace(/\n/gm, "\n\n")
           results[name] = marked.parse(results[name]);
 
@@ -110,10 +117,11 @@ const card = {
         }
       } else {
         // if there is no tabs
+        original["default"] = value.trim()
         results["default"] = marked.parse(value.replace(/\n/gm, "\n\n"));
         results["default"] = autoLink(results["default"], directory)
       }
-      return results;
+      return [results, original];
     },
     loadProfile(value) {
       if (!this.hasData(value)) return [value, {}];
@@ -126,7 +134,7 @@ const card = {
       try {
         profile = jsyaml.load(autoLink(parts[1].replace(/=/g, "").trim(), this.directory), 'utf8');
       } catch (error) {
-        console.log("Bad YAML Data on .md file");
+        conesole.log("Bad YAML Data on .md file");
         return [value, {}];
       }
       
@@ -185,14 +193,14 @@ const card = {
       return Object.keys(this.areas[area].profile).length != 0
     },
     toggleArea() {
-      const spoilerArea = document.getElementById("spoiler-area");
+      const fullArea = document.getElementById("full-area");
       const previewArea = document.getElementById("preview-area");
       
       if (this.noPreview || this.toggleState) {
-        spoilerArea.classList.remove("hide");
+        fullArea.classList.remove("hide");
         previewArea.classList.add("hide");
       } else {
-        spoilerArea.classList.add("hide");
+        fullArea.classList.add("hide");
         previewArea.classList.remove("hide");
       }
     }

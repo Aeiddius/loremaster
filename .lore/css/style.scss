@@ -61,3 +61,37 @@ body {
   align-items: center;
   margin-bottom: 10px;
 }
+
+.flex {
+  display: flex;
+  gap: 5px;
+}
+
+.flex-c {
+  flex-direction: column;
+}
+
+.flex-r {
+  flex-direction: row;
+}
+
+.flex-between {
+  justify-content: space-between;
+}
+
+.flex-align {
+  align-items: center;
+}
+
+.width-100 {
+  width: 100%;
+}
+
+.pos-relative {
+  position: relative;
+}
+
+.float-bottom {
+  position: absolute; 
+  bottom: 0;
+}

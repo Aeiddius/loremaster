@@ -9,14 +9,17 @@
 
 .card {
   // Block
-  width: 50vw;
+  width: 46vw;
   padding: $gb-padding; 
   border-radius: $gb-border-radius; 
     
   // Element
-  background-color: white; 
+  // background-color: white; 
+  background: rgb(255,255,255);
+  background: linear-gradient(124deg, rgba(255,255,255,1) 0%, rgba(237,237,237,1) 100%);
+
   color: #252525;
-  font-size: 13px;
+  font-size: 13px; 
   font-family: Rubik Light; 
   line-height: 20px;
   

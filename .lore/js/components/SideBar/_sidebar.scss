@@ -10,29 +10,24 @@ $sidebar--bg: $black;
   width: 220px;
   height: 90vh;
   min-height: 400px;
-
   // Box
   padding: 20px;
   padding-top: 10px;
   border-radius: $gb-border-radius;
   border-top-right-radius: 0px;
   border-top-left-radius: 0px;
-
   // Element
   background-color: $sidebar--bg;
   color: white;
-  
   // Misc
   z-index:  999;
   @include shadow;
   transition: 0.5s ease-in-out;
 }
 
-
 .titles {
   // Block
   margin: 10px 3px;
-
   .title {
     // Block
     margin: 0px;
@@ -41,7 +36,6 @@ $sidebar--bg: $black;
     font-family: cambria;
     font-weight: 100;
   }
-
   .subtitle {
     // Block
     margin: 0px;
@@ -59,17 +53,14 @@ $sidebar--bg: $black;
   line-height: 30px;
   font-family: Rubik Light;
   user-select: none;
-  
   // Children
   .button--showsub {
     float: right; 
     color: #ffffff44;
-
     // Misc
     transition: 0.2s ease-in-out;
     transform: scale(1);
     user-select: none;
-
     // Effect
     &:hover {
       transform: scale(1.1);
@@ -85,41 +76,33 @@ $sidebar--bg: $black;
       background-color: transparent;
       text-align: left;
       // Misc
-      transition: 0.1s linear;
-     
+      transition: 0.2s linear !important;
       // Hover
       &:hover {
-        background-color: transparent;
         color: $blue;
-        transform: scale(1.1);
+        // @include fancy-blue;
+        // background-color: $blue;
+        // transform: scale(1.1);
       }
     }
-
     .button--autolink {
       color: white;
     }
   }
-
-  
   .button--subnav {
     font-size: 13px;
     line-height: 15px;
     margin-left: 10px;
   }
-
   .hide-subnav {
     display: none;
   }
-  
-
   .button--active {
     .button {
       color: $blue !important; 
     }
   }
 }
-
-
 
 
 .close {
@@ -152,7 +135,7 @@ $sidebar--bg: $black;
 }
 
 
-@media screen and (max-width: 1000px) {
+@media screen and (max-width: 1200px) {
   .sidebar {
     left: 10px;
     top: -5000px; 
@@ -163,10 +146,6 @@ $sidebar--bg: $black;
     display: block;
   }
 }
-
-// @media screen and (max-width: 1000px) {
-
-// }
 
 @media screen and (max-width: 900px) {
 

@@ -19,7 +19,10 @@ function start() {
         
         // Card
         content: "",
-        pageName: ""
+        pageName: "",
+
+        // Editor
+        areas: {}
 
       }
     },
@@ -99,12 +102,15 @@ function start() {
       },
       getCurrentPageId() {
         return (new URLSearchParams(window.location.search)).get('p');
-      }
+      },
+      async dataToEditor(areas) {
+        this.areas = areas;
+      } 
     }
   })
 
-  root = mount(app)
-
+  root = mount(app) 
+ 
 
 }
 

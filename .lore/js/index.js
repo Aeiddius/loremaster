@@ -20,7 +20,10 @@ function start() {
         
         // Card
         content: "",
-        pageName: ""
+        pageName: "",
+
+        // Editor
+        areas: {}
 
       }
     },
@@ -100,12 +103,15 @@ function start() {
       },
       getCurrentPageId() {
         return (new URLSearchParams(window.location.search)).get('p');
-      }
+      },
+      async dataToEditor(areas) {
+        this.areas = areas;
+      } 
     }
   })
 
-  root = mount(app)
-
+  root = mount(app) 
+ 
 
 }
 
@@ -131,6 +137,8 @@ function mount(app) {
   const components = [
     breadcrumbs,
     card,
+    editbar,
+    editor,
     modal,
     profilebox,
     searchbox,
@@ -283,6 +291,14 @@ function changePage(pageId) {
   root.reload(pageId)
 }
 
+const copyObject = (obj) => {
+  let result = {};
+  Object.entries(obj).forEach(([key, value]) => {
+    result[key] = value;
+  });
+  return result;
+};
+
 var globalIdList = []
 
 function makeid(length) {
@@ -389,7 +405,7 @@ const card = {
     return {
       // Card Data
       areas: {
-        spoiler: {
+        full: {
           tabs: {},
           profile: {}
         },
@@ -405,9 +421,10 @@ const card = {
 
       // Divisors
       profileDivisor: "=============================",
-      spoilerDivisor: "----------------------------------------------------------------------",
+      fullDivisor: "----------------------------------------------------------------------",
     }
   },
+  emits: ['processed-content'],
   props: {
     title: { type: String, default: "Ethan Morales" },
     content: { type: String },
@@ -426,7 +443,7 @@ const card = {
         this.profile = {}
 
         // Start
-        const [spoilerContents, previewContent] = value.split(this.spoilerDivisor).slice(0, 2);
+        const [fullContents, previewContent] = value.split(this.fullDivisor).slice(0, 2);
 
         // Checks if there is no preview
         if (previewContent == undefined || previewContent.trim().length == 0 ) {
@@ -436,7 +453,7 @@ const card = {
         }
 
         const areas = {
-          'spoiler': spoilerContents.trim(), 
+          'full': fullContents.trim(), 
           'preview': previewContent == undefined ? "" : previewContent.trim()
         }
 
@@ -444,7 +461,9 @@ const card = {
           let [content, profile] = this.loadProfile(areas[area])
 
           this.areas[area].profile = profile
-          this.areas[area].tabs = this.createContent(content, this.directory)
+          const [tabs, tabsOriginal] = this.createContent(content, this.directory)
+          this.areas[area].tabs = tabs
+          this.areas[area].original = tabsOriginal
         }
 
         // Refresh
@@ -452,6 +471,8 @@ const card = {
         this.fixQuote()
         this.makeTOC()
         this.toggleArea()
+
+        this.$emit('processed-content', this.areas)
       }
     },
     toggleState: {
@@ -464,7 +485,8 @@ const card = {
   methods: {
     createContent(value, directory) {
 
-      const results = {};
+      let results = {};
+      let original = {}
       const regex = /===(?!.*===)([^=]+)===/
 
       if (regex.test(value)) {
@@ -484,6 +506,7 @@ const card = {
         // Parse data
         for (const name in results) {
           // Convert md into html
+          original[name] = results[name].trim()
           results[name] = results[name].replace(/\n/gm, "\n\n")
           results[name] = marked.parse(results[name]);
 
@@ -494,10 +517,11 @@ const card = {
         }
       } else {
         // if there is no tabs
+        original["default"] = value.trim()
         results["default"] = marked.parse(value.replace(/\n/gm, "\n\n"));
         results["default"] = autoLink(results["default"], directory)
       }
-      return results;
+      return [results, original];
     },
     loadProfile(value) {
       if (!this.hasData(value)) return [value, {}];
@@ -510,7 +534,7 @@ const card = {
       try {
         profile = jsyaml.load(autoLink(parts[1].replace(/=/g, "").trim(), this.directory), 'utf8');
       } catch (error) {
-        console.log("Bad YAML Data on .md file");
+        conesole.log("Bad YAML Data on .md file");
         return [value, {}];
       }
       
@@ -569,14 +593,14 @@ const card = {
       return Object.keys(this.areas[area].profile).length != 0
     },
     toggleArea() {
-      const spoilerArea = document.getElementById("spoiler-area");
+      const fullArea = document.getElementById("full-area");
       const previewArea = document.getElementById("preview-area");
       
       if (this.noPreview || this.toggleState) {
-        spoilerArea.classList.remove("hide");
+        fullArea.classList.remove("hide");
         previewArea.classList.add("hide");
       } else {
-        spoilerArea.classList.add("hide");
+        fullArea.classList.add("hide");
         previewArea.classList.remove("hide");
       }
     }
@@ -604,6 +628,154 @@ const card = {
       </div>
     </div>
   ` 
+}
+
+const editbar = {
+  name: "Editbar",
+  props: {},
+  methods: {
+    open() {
+      document.getElementById("editor-box").classList.remove("hide")
+    }
+  },
+  template: `
+    <div class="editbar">
+      <h1>Edit Mode</h1>
+
+      <div class="buttons">
+        <button class="button--edit" @click="open">Edit Page</button>
+        <button class="button--edit">Add Page</button>
+        <button class="button--edit button--edit-red">Delete Page</button>
+      </div>
+
+      
+
+    </div>
+  `
+}
+
+const editor = {
+  name: "Editor",
+  data() {
+    return {
+      pageData: {}  
+    }
+  },
+  props: {
+    directory: { type: Object, required: true }
+  },
+  // mounted() {
+  //   document.getElementById("editor-area").value = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non\n proident, sunt in\n culpa qui officia deserunt \nmollit anim id est laborum."
+  // },
+  methods: {
+
+    start(value){
+      this.pageData = structuredClone(value)
+      console.log(this.pageData)
+      console.log(this.directory)
+
+      // if (Object.keys(value).length == 0) return
+      // this.pageData = {} 
+      // this.pageData = copyObject(value);
+
+      // document.getElementById("editor-area").value = this.pageData.full.original
+      // this.getArea('full')
+
+      
+      // const tab = this.pageData['full'].original[Object.keys(this.pageData.full.original)[0]]
+      // document.getElementById("editor-area").value = tab
+      // console.log("Cakkedd")      
+    },
+    exit() {
+      this.getNode("editor-box").classList.add("hide")
+    },
+    getNode(id) {
+      return document.getElementById(id)
+    }
+  },
+  template: `
+  <div id="editor-box" class="editor-container">
+    
+    <div id="editor" class="flex">      
+      <!-- Text Input Area -->
+      <div class="textbox">
+        <h1>Editor</h1>
+        <!-- Path selector -->
+        <div class="path-select flex width-100 flex-align">
+            <label>Path: </label>
+            <div class="width-100">
+              <input type="text" name="example" list="exampleList" 
+                     class="input width-100"
+                     placeholder="/">
+              <datalist id="exampleList">
+                <option value="Edge"/>
+                <option value="Firefox"/>
+                <option value="Chrome"/>
+                <option value="Opera"/>
+                <option value="Safari"/>
+              </datalist>
+            </div>
+        </div>
+        <!-- Textarea -->
+        <textarea name="background-color: white;" id="textarea"
+                  placeholder="Write here..."></textarea>      
+      </div>
+
+      <!-- Settings -->
+      <div class="editor-options flex flex-c pos-relative">
+
+        <!-- Mode buttons -->
+        <span class="flex">
+          <!-- <label>Mode</label> -->
+          <button class="btn btn-active">Full</button>
+          <button class="btn">Preview</button>
+        </span>
+
+        <button class="btn">Edit Profile</button>
+
+        <!-- Select Tab -->
+        <div class="tab-options flex flex-c mt-15">
+          <label>Tabs</label>
+          <!-- Dropdown -->
+          <select id="tab-select">
+              <option value="ActionScript">ActionScript</option>
+              <option value="AppleScript">AppleScript</option>
+          </select>
+
+          <!-- Edit -->
+          <span class="flex">
+            <button class="btn">New</button>
+            <button class="btn">Rename</button>
+          </span>
+          <button class="btn">Delete</button>
+        </div>
+
+        <!-- Tags -->
+        <div class="flex flex-c mt-15">
+          <label>Tags</label>
+          <input type="text" id="tags-input" class="input width-100"
+                 placeholder="tagA tagB tagC">
+        </div>
+
+        <!-- Parent -->
+        <div class="flex flex-c mt-15">
+          <label>Parent</label>
+          <input type="text" id="parent-input" class="input width-100"
+                 placeholder="home">
+        </div>
+
+
+        <div class="flex float-bottom width-100">
+          <button class="btn btn-green">Save</button>
+          <button class="btn btn-red" @click="exit">Exit</button>
+        </div>
+      </div>
+      <!-- Settings -->
+    
+    </div> 
+
+  </div>
+  `
 }
 
 const modal = {
@@ -810,6 +982,18 @@ const sidebar = {
     },
     getNameClean(name) {
       return name.replace(/\[/g, "").replace(/\]/g, "").trim().toLowerCase()
+    },
+    expand(navId) {
+      const subnav = document.getElementById(navId)
+      if (subnav) {
+        subnav.classList.remove("hide-subnav")
+      }
+    },
+    collapse(navId) {
+      const subnav = document.getElementById(navId)
+      if (subnav) {
+        subnav.classList.add("hide-subnav")
+      }
     }
   },
   template: `
@@ -833,7 +1017,10 @@ const sidebar = {
           
           <!-- Main Button -->
           <span v-html="value.main"
-                :class="['button--mainnav', isCurrentNav== getNameClean(name) ? 'button--active' : '']"></span> 
+                :class="['button--mainnav', isCurrentNav== getNameClean(name) ? 'button--active' : '']"
+                @mouseover="expand(name + '-navid')"
+                
+                ></span> 
           <button v-if="Object.keys(value.subnav).length != 0"
                   class="button button--showsub" 
                   @click="toggleSubNav(name + '-navid')">
@@ -843,7 +1030,8 @@ const sidebar = {
           <!-- Sub button -->
           <div v-if="Object.keys(value.subnav).length != 0"
                class="button--subnav hide-subnav"
-               :id="name + '-navid'">
+               :id="name + '-navid'"
+               @mouseleave="collapse(name + '-navid')">
 
             <template v-for="(valuesub, namesub, indexsub) in value.subnav">
               <span v-html="valuesub" class="button--mainnav"></span> 
