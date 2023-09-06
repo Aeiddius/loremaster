@@ -1011,7 +1011,7 @@ body::-webkit-scrollbar-thumb {
 }
 
 .hide {
-  display: none;
+  display: none !important;
 }
 
 .error {

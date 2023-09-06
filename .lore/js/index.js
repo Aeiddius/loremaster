@@ -38,8 +38,6 @@ function start() {
       
       // Get query id
       let pageId = this.getCurrentPageId();
-      if (pageId == null || pageId == "") pageId = "home"
-      if (!this.directory.hasOwnProperty(pageId)) pageId = "404"
 
       // Loads page
       this.reload(pageId)
@@ -63,8 +61,7 @@ function start() {
     methods: {
       async reload(pageId, isPopState = false, savePage="") {
 
-        
-
+       
         // Prevents repeated history when the same page button is clicked
         if (savePage == "") {
           if (!isPopState && pageId === historyList[globalPosition]) return;
@@ -113,10 +110,12 @@ function start() {
         this.$forceUpdate();
       },
       getCurrentPageId() {
-        return (new URLSearchParams(window.location.search)).get('p');
+        let pageId = (new URLSearchParams(window.location.search)).get('p');
+        if (pageId == null || pageId == "") pageId = "home"
+        if (!this.directory.hasOwnProperty(pageId)) pageId = "404"
+        return pageId
       },
       savePage(newPage) {
-        console.log("SAVE PAGE FUNC")
         this.reload(this.getCurrentPageId(), false, newPage)
       }
     }
@@ -151,6 +150,7 @@ function mount(app) {
     card,
     editbar,
     editor,
+    editortab,
     modal,
     profilebox,
     searchbox,
@@ -368,6 +368,11 @@ history.pushState = modifyStateFunction(pushState, 1);
 history.replaceState = modifyStateFunction(replaceState, 0);
 window.addEventListener('popstate', onPopstate);
 
+function splitStringAtLast(inputString, delimiter) {
+  const lastIndex = inputString.lastIndexOf(delimiter);
+  return lastIndex === -1 ? [inputString] : [inputString.slice(0, lastIndex), inputString.slice(lastIndex + delimiter.length)];
+}
+
 
 
 
@@ -452,7 +457,7 @@ const card = {
           this.areas[area].tabs = tabs
           this.areas[area].original = tabsOriginal
           this.areas[area].profileOriginal = profileOriginal
-        }
+        } 
 
         // Refresh
         await this.refresh()
@@ -481,12 +486,18 @@ const card = {
       if (regex.test(value)) {
         // Split text by "===", remove empty sections
         const sections = value.split("===").filter(section => section.trim() !== ""); 
-      
+        console.log(sections)
         // Loop through sections by index, incrementing by  2 to pair headers and content
         for (let i = 0; i < sections.length; i += 2) {
           // Get the section header and convert to lowercase
+          
           const key = sections[i].trim(); 
+          
           // Get the section content
+          if ((i+1) == sections.length) {
+            results[key] = " "
+            break 
+          }
           const value = sections[i + 1].trim(); 
           // Assign the section header as a key and content as the corresponding value in the object
           results[key] = value; 
@@ -649,12 +660,21 @@ const editor = {
   data() {
     return {
       pageData: {},
+      pathChoices: [],
+
+      
+      // Check to see if profile is currently edited
+      isCurrentProfile: false,
+
+      // area obj
       currentArea: "",
       currentTab: "",
-      isCurrentProfile: false,
       currentAreaObj: {}
+
+
     }
   },
+  components: ['EditorTab'],
   emits: ['save-page'],
   props: {
     directory: { type: Object, required: true }
@@ -668,8 +688,12 @@ const editor = {
     changeArea(area) {
       this.isCurrentProfile = false
       this.currentArea = area
-      this.currentTab = Object.keys(this.pageData[area].tabs)[0]
+      this.currentTab = Object.keys(this.pageData[area].original)[0]
       this.currentAreaObj = copyobj(this.pageData[area])
+
+
+
+      console.log(this.currentAreaObj)
 
       // Set <Tabs btn active>
       for (const ar of ['full', 'preview']) {
@@ -681,6 +705,13 @@ const editor = {
         
       }
 
+      const paths = [];
+      for (const entryId in this.directory) {
+        const entry = splitStringAtLast(this.directory[entryId].path, '/')[0]
+        if (paths.includes(entry)) continue
+        paths.push(entry)
+      }
+      this.pathChoices = paths.sort()
       // Set <textarea>
       this.refreshTextArea()
     },
@@ -752,9 +783,35 @@ const editor = {
         }
       } 
 
+      console.log(raw)
+
       this.$emit('save-page', raw)
+    },
+    tabNew() {
+      const value = this.getNode('tab-new-input').value.trim()
+      if (value === "") return
+
+      const tabs = Object.keys(this.currentAreaObj.original)
+
+      if (tabs.includes(value)) return
+
+      this.pageData[this.currentArea].original[value] = ""
 
     },
+    tabRename() {
+      const value = this.getNode('tab-rename-input').value.trim()
+      if (value === "") return
+
+      const curTabVal = `${this.pageData[this.currentArea].original[this.currentTab]}`
+
+      this.pageData[this.currentArea].original[value] = curTabVal
+      delete this.pageData[this.currentArea].original[this.currentTab]
+
+
+      this.changeArea(this.currentArea)
+      this.refreshTextArea()
+    },
+
     exit() {
       this.getNode("editor-box").classList.add("hide")
     },
@@ -765,6 +822,17 @@ const editor = {
   template: `
   <div id="editor-box" class="editor-container">
     
+
+
+
+
+    <EditorTab/>
+
+
+
+
+
+
     <div id="editor" class="flex">      
       <!-- Text Input Area -->
       <div class="textbox">
@@ -773,15 +841,13 @@ const editor = {
         <div class="path-select flex width-100 flex-align">
             <label>Path: </label>
             <div class="width-100">
-              <input type="text" name="example" list="exampleList" 
+              <input type="text" name="example" list="path-choices" 
                      class="input width-100"
                      placeholder="/">
-              <datalist id="exampleList">
-                <!-- <option value="Edge" v-for="(value, name) in pageData"/> -->
-                <option value="Firefox"/>
-                <option value="Chrome"/>
-                <option value="Opera"/>
-                <option value="Safari"/>
+              <datalist id="path-choices">
+                <option :value="value" v-for="(value, index) in pathChoices">
+                </option>
+                
               </datalist>
             </div>
         </div>
@@ -807,16 +873,16 @@ const editor = {
         <div class="tab-options flex flex-c mt-15">
           <label>Tabs</label>
           <!-- Dropdown -->
-          <select id="tab-select" @change="changeTab">
-              <option :value="name" v-for="(value, name) in currentAreaObj.tabs">
+          <select id="tab-select" @change="changeTab" v-if="currentAreaObj">
+              <option :value="name" v-for="(value, name) in currentAreaObj.original">
                 {{ name }}
               </option>
           </select>
 
           <!-- Edit -->
           <span class="flex">
-            <button class="btn">New</button>
-            <button class="btn">Rename</button>
+            <button class="btn" @click="getNode('tab-new').classList.toggle('hide')">New</button>
+            <button class="btn" @click="getNode('tab-rename').classList.toggle('hide')">Rename</button>
           </span>
           <button class="btn">Delete</button>
         </div>
@@ -836,6 +902,34 @@ const editor = {
         </div>
 
 
+   
+        <!-- Tab:New -->
+        <div class="flex flex-c mt-15 boxes hide" id="tab-new">
+          <label>New Tab</label>
+          <input type="text" id="tab-new-input" class="input width-100"
+                 placeholder="home">
+
+          <div class="flex">
+            <button class="btn" @click="tabNew">Ok</button>
+            <button class="btn" @click="getNode('tab-new').classList.add('hide')">Cancel</button>
+          </div>
+        </div>       
+
+
+        <!-- Tab:Rename -->
+        <div class="flex flex-c mt-15 boxes hide" id="tab-rename">
+          <label>Rename Tab</label>
+          <input type="text" id="tab-rename-input" class="input width-100"
+                 placeholder="home">
+
+          <div class="flex">
+            <button class="btn" @click="tabRename">Ok</button>
+            <button class="btn" @click="getNode('tab-rename').classList.add('hide')">Cancel</button>
+          </div>
+        </div>       
+
+
+
         <div class="flex float-bottom width-100">
           <button class="btn btn-green" @click="save">Save</button>
           <button class="btn btn-red" @click="exit">Exit</button>
@@ -846,6 +940,20 @@ const editor = {
     </div> 
 
   </div>
+  `
+}
+
+const editortab = {
+  name: "EditorTab",
+  props: {},
+  template: `
+  
+  <dialog id="editortab">
+
+    <h1>Tabs</h1>
+
+    <button class="btn" @click="editortab.close()">Close</button>
+  </dialog>
   `
 }
 

@@ -37,8 +37,6 @@ function start() {
       
       // Get query id
       let pageId = this.getCurrentPageId();
-      if (pageId == null || pageId == "") pageId = "home"
-      if (!this.directory.hasOwnProperty(pageId)) pageId = "404"
 
       // Loads page
       this.reload(pageId)
@@ -62,8 +60,7 @@ function start() {
     methods: {
       async reload(pageId, isPopState = false, savePage="") {
 
-        
-
+       
         // Prevents repeated history when the same page button is clicked
         if (savePage == "") {
           if (!isPopState && pageId === historyList[globalPosition]) return;
@@ -112,10 +109,12 @@ function start() {
         this.$forceUpdate();
       },
       getCurrentPageId() {
-        return (new URLSearchParams(window.location.search)).get('p');
+        let pageId = (new URLSearchParams(window.location.search)).get('p');
+        if (pageId == null || pageId == "") pageId = "home"
+        if (!this.directory.hasOwnProperty(pageId)) pageId = "404"
+        return pageId
       },
       savePage(newPage) {
-        console.log("SAVE PAGE FUNC")
         this.reload(this.getCurrentPageId(), false, newPage)
       }
     }

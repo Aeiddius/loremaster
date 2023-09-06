@@ -3,12 +3,21 @@ const editor = {
   data() {
     return {
       pageData: {},
+      pathChoices: [],
+
+      
+      // Check to see if profile is currently edited
+      isCurrentProfile: false,
+
+      // area obj
       currentArea: "",
       currentTab: "",
-      isCurrentProfile: false,
       currentAreaObj: {}
+
+
     }
   },
+  components: ['EditorTab'],
   emits: ['save-page'],
   props: {
     directory: { type: Object, required: true }
@@ -22,8 +31,12 @@ const editor = {
     changeArea(area) {
       this.isCurrentProfile = false
       this.currentArea = area
-      this.currentTab = Object.keys(this.pageData[area].tabs)[0]
+      this.currentTab = Object.keys(this.pageData[area].original)[0]
       this.currentAreaObj = copyobj(this.pageData[area])
+
+
+
+      console.log(this.currentAreaObj)
 
       // Set <Tabs btn active>
       for (const ar of ['full', 'preview']) {
@@ -35,6 +48,13 @@ const editor = {
         
       }
 
+      const paths = [];
+      for (const entryId in this.directory) {
+        const entry = splitStringAtLast(this.directory[entryId].path, '/')[0]
+        if (paths.includes(entry)) continue
+        paths.push(entry)
+      }
+      this.pathChoices = paths.sort()
       // Set <textarea>
       this.refreshTextArea()
     },
@@ -106,9 +126,35 @@ const editor = {
         }
       } 
 
+      console.log(raw)
+
       this.$emit('save-page', raw)
+    },
+    tabNew() {
+      const value = this.getNode('tab-new-input').value.trim()
+      if (value === "") return
+
+      const tabs = Object.keys(this.currentAreaObj.original)
+
+      if (tabs.includes(value)) return
+
+      this.pageData[this.currentArea].original[value] = ""
 
     },
+    tabRename() {
+      const value = this.getNode('tab-rename-input').value.trim()
+      if (value === "") return
+
+      const curTabVal = `${this.pageData[this.currentArea].original[this.currentTab]}`
+
+      this.pageData[this.currentArea].original[value] = curTabVal
+      delete this.pageData[this.currentArea].original[this.currentTab]
+
+
+      this.changeArea(this.currentArea)
+      this.refreshTextArea()
+    },
+
     exit() {
       this.getNode("editor-box").classList.add("hide")
     },
@@ -119,6 +165,17 @@ const editor = {
   template: `
   <div id="editor-box" class="editor-container">
     
+
+
+
+
+    <EditorTab/>
+
+
+
+
+
+
     <div id="editor" class="flex">      
       <!-- Text Input Area -->
       <div class="textbox">
@@ -127,15 +184,13 @@ const editor = {
         <div class="path-select flex width-100 flex-align">
             <label>Path: </label>
             <div class="width-100">
-              <input type="text" name="example" list="exampleList" 
+              <input type="text" name="example" list="path-choices" 
                      class="input width-100"
                      placeholder="/">
-              <datalist id="exampleList">
-                <!-- <option value="Edge" v-for="(value, name) in pageData"/> -->
-                <option value="Firefox"/>
-                <option value="Chrome"/>
-                <option value="Opera"/>
-                <option value="Safari"/>
+              <datalist id="path-choices">
+                <option :value="value" v-for="(value, index) in pathChoices">
+                </option>
+                
               </datalist>
             </div>
         </div>
@@ -161,16 +216,16 @@ const editor = {
         <div class="tab-options flex flex-c mt-15">
           <label>Tabs</label>
           <!-- Dropdown -->
-          <select id="tab-select" @change="changeTab">
-              <option :value="name" v-for="(value, name) in currentAreaObj.tabs">
+          <select id="tab-select" @change="changeTab" v-if="currentAreaObj">
+              <option :value="name" v-for="(value, name) in currentAreaObj.original">
                 {{ name }}
               </option>
           </select>
 
           <!-- Edit -->
           <span class="flex">
-            <button class="btn">New</button>
-            <button class="btn">Rename</button>
+            <button class="btn" @click="getNode('tab-new').classList.toggle('hide')">New</button>
+            <button class="btn" @click="getNode('tab-rename').classList.toggle('hide')">Rename</button>
           </span>
           <button class="btn">Delete</button>
         </div>
@@ -188,6 +243,34 @@ const editor = {
           <input type="text" id="parent-input" class="input width-100"
                  placeholder="home">
         </div>
+
+
+   
+        <!-- Tab:New -->
+        <div class="flex flex-c mt-15 boxes hide" id="tab-new">
+          <label>New Tab</label>
+          <input type="text" id="tab-new-input" class="input width-100"
+                 placeholder="home">
+
+          <div class="flex">
+            <button class="btn" @click="tabNew">Ok</button>
+            <button class="btn" @click="getNode('tab-new').classList.add('hide')">Cancel</button>
+          </div>
+        </div>       
+
+
+        <!-- Tab:Rename -->
+        <div class="flex flex-c mt-15 boxes hide" id="tab-rename">
+          <label>Rename Tab</label>
+          <input type="text" id="tab-rename-input" class="input width-100"
+                 placeholder="home">
+
+          <div class="flex">
+            <button class="btn" @click="tabRename">Ok</button>
+            <button class="btn" @click="getNode('tab-rename').classList.add('hide')">Cancel</button>
+          </div>
+        </div>       
+
 
 
         <div class="flex float-bottom width-100">
