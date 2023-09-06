@@ -22,9 +22,6 @@ function start() {
         content: "",
         pageName: "",
 
-        // Editor
-        areas: {}
-
       }
     },
     async mounted() {
@@ -64,10 +61,17 @@ function start() {
 
     },
     methods: {
-      async reload(pageId, isPopState = false) {
+      async reload(pageId, isPopState = false, savePage="") {
+
+        
+
         // Prevents repeated history when the same page button is clicked
-        if (!isPopState && pageId === historyList[globalPosition]) return;
-      
+        if (savePage == "") {
+          if (!isPopState && pageId === historyList[globalPosition]) return;
+        }
+        
+        console.log("thisss")
+        
         // Deal with Global Positioning
         if (globalPosition === null) globalPosition = 0;
         else if (!isPopState) globalPosition += 1;
@@ -83,19 +87,26 @@ function start() {
         let isError = false;
         let pageMeta = this.directory[pageId] || this.directory["404"];
         if (!this.directory.hasOwnProperty(pageId)) isError = true;
-      
-        // Update Card Content
-        const resp = await fetch(pageMeta.path);
+        
         this.pageName = pageMeta.title;
-      
-        if (resp.status === 404) {
-          this.content = `File <span class="error">${pageId}</span> is registered in metadata.json but does not exist`;
+
+        // Update Card Content
+        if (savePage == "") {
+          const resp = await fetch(pageMeta.path);
+          
+        
+          if (resp.status === 404) {
+            this.content = `File <span class="error">${pageId}</span> is registered in metadata.json but does not exist`;
+          } else {
+            this.content = (await resp.text()).trim() || "The Page is empty";
+          }
+        
+          if (isError) {
+            this.content += `\n\nPage <span class="error">${pageId}</span> does not exist.`;
+          }
+
         } else {
-          this.content = (await resp.text()).trim() || "The Page is empty";
-        }
-      
-        if (isError) {
-          this.content += `\n\nPage <span class="error">${pageId}</span> does not exist.`;
+          this.content = savePage.trim()
         }
       
         // Update App
@@ -104,9 +115,10 @@ function start() {
       getCurrentPageId() {
         return (new URLSearchParams(window.location.search)).get('p');
       },
-      async dataToEditor(areas) {
-        this.areas = areas;
-      } 
+      savePage(newPage) {
+        console.log("SAVE PAGE FUNC")
+        this.reload(this.getCurrentPageId(), false, newPage)
+      }
     }
   })
 
@@ -257,29 +269,6 @@ function autoLink(value, directory) {
   //   }
   // }
 
-function autoSpoil(value) {
-
-  const spoilers = value.match(/\[\[spoiler\]\]([\S\s]*?)\[\[\/spoiler\]\]/gm)
-
-  for (let index in spoilers) {
-    const spoiler = spoilers[index]
-
-    // console.log(spoiler)
-
-    value = value.replace(spoiler, 
-      "<span class=\"spoilers\">" + 
-      spoiler
-        .replace("[[spoiler]]", "")
-        .replace("[[/spoiler]]", "")
-        .trim() 
-        + "</span>")
-    // console.log(value)
-  }
-  
-
-  return value
-}
-
 function changePage(pageId) {
   
   const url = new URL(window.location);  
@@ -291,13 +280,9 @@ function changePage(pageId) {
   root.reload(pageId)
 }
 
-const copyObject = (obj) => {
-  let result = {};
-  Object.entries(obj).forEach(([key, value]) => {
-    result[key] = value;
-  });
-  return result;
-};
+function copyobj(obj) {
+  return JSON.parse(JSON.stringify(obj)) 
+}
 
 var globalIdList = []
 
@@ -435,6 +420,7 @@ const card = {
   watch: {
     content: {
       immediate: true,
+      deep: true,
       async handler(value) {      
         // Return if value is empty
         if (value == '') return  
@@ -458,12 +444,14 @@ const card = {
         }
 
         for (const area in areas) {
-          let [content, profile] = this.loadProfile(areas[area])
+          let [content, profile, profileOriginal] = this.loadProfile(areas[area])
 
           this.areas[area].profile = profile
           const [tabs, tabsOriginal] = this.createContent(content, this.directory)
+
           this.areas[area].tabs = tabs
           this.areas[area].original = tabsOriginal
+          this.areas[area].profileOriginal = profileOriginal
         }
 
         // Refresh
@@ -473,6 +461,7 @@ const card = {
         this.toggleArea()
 
         this.$emit('processed-content', this.areas)
+        console.log("emitted")
       }
     },
     toggleState: {
@@ -524,15 +513,16 @@ const card = {
       return [results, original];
     },
     loadProfile(value) {
-      if (!this.hasData(value)) return [value, {}];
+      if (!this.hasData(value)) return [value, {}, ""];
       
       // Separate content and profile
       const parts = value.split(this.profileDivisor);
       
+      const profileText = parts[1].replace(/=/g, "").trim()
       // Load yaml
       let profile = {};
       try {
-        profile = jsyaml.load(autoLink(parts[1].replace(/=/g, "").trim(), this.directory), 'utf8');
+        profile = jsyaml.load(autoLink(profileText, this.directory), 'utf8');
       } catch (error) {
         conesole.log("Bad YAML Data on .md file");
         return [value, {}];
@@ -541,7 +531,7 @@ const card = {
       // Load content
       const content = parts[2].trim();
     
-      return [content, profile];
+      return [content, profile, profileText];
    },
     makeTOC() {
       const tabs = document.getElementsByClassName("tab")
@@ -658,33 +648,112 @@ const editor = {
   name: "Editor",
   data() {
     return {
-      pageData: {}  
+      pageData: {},
+      currentArea: "",
+      currentTab: "",
+      isCurrentProfile: false,
+      currentAreaObj: {}
     }
   },
+  emits: ['save-page'],
   props: {
     directory: { type: Object, required: true }
   },
-  // mounted() {
-  //   document.getElementById("editor-area").value = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non\n proident, sunt in\n culpa qui officia deserunt \nmollit anim id est laborum."
-  // },
   methods: {
 
     start(value){
-      this.pageData = structuredClone(value)
-      console.log(this.pageData)
-      console.log(this.directory)
+      this.pageData = JSON.parse(JSON.stringify(value))  
+      this.changeArea('full')
+    },
+    changeArea(area) {
+      this.isCurrentProfile = false
+      this.currentArea = area
+      this.currentTab = Object.keys(this.pageData[area].tabs)[0]
+      this.currentAreaObj = copyobj(this.pageData[area])
 
-      // if (Object.keys(value).length == 0) return
-      // this.pageData = {} 
-      // this.pageData = copyObject(value);
+      // Set <Tabs btn active>
+      for (const ar of ['full', 'preview']) {
+        if (ar == area) {
+          this.getNode(`btn-${ar}`).classList.add("btn-active")
+        } else {
+          this.getNode(`btn-${ar}`).classList.remove("btn-active")
+        }
+        
+      }
 
-      // document.getElementById("editor-area").value = this.pageData.full.original
-      // this.getArea('full')
+      // Set <textarea>
+      this.refreshTextArea()
+    },
+    changeTab(event) {
+      // Save the last area
+      this.isCurrentProfile = false
+      const newTab = event.currentTarget.value
+      this.currentTab = newTab
+
+      this.refreshTextArea()
+    },
+    refreshTextArea(){
+      this.getNode("textarea").value = `${this.currentAreaObj.original[this.currentTab]}`
+    },
+    editProfile() {
+      if (this.isCurrentProfile == false) {
+        this.isCurrentProfile = true
+        this.getNode("textarea").value = `${this.currentAreaObj.profileOriginal}`
+      } else {
+        this.isCurrentProfile = false 
+        this.refreshTextArea()
+      }
+
+    },
+    saveTextArea(event) {
+      if (this.isCurrentProfile == false) {
+        this.pageData[this.currentArea].original[this.currentTab] = event.currentTarget.value
+        this.currentAreaObj.original[this.currentTab] = event.currentTarget.value
+      } else {
+        this.pageData[this.currentArea].profileOriginal = event.currentTarget.value
+        this.currentAreaObj.profileOriginal = event.currentTarget.value
+      }
+
+
+
+
+    },
+    save() {
+      let raw = ""
+
+      // Check if preview is empty
+      let noPreview = false 
+      const previewKeys = Object.keys(this.pageData['preview'].original)
+      if (previewKeys.length == 1 && previewKeys[0] == 'default' && this.pageData['preview'].original['default'].trim() == "") {
+          noPreview = true
+      }
 
       
-      // const tab = this.pageData['full'].original[Object.keys(this.pageData.full.original)[0]]
-      // document.getElementById("editor-area").value = tab
-      // console.log("Cakkedd")      
+
+      for (const area of ['full', 'preview']) {
+        const profile = this.pageData[area].profileOriginal
+        if (profile.trim() != "") {
+          raw += `=============================\n${profile}\n=============================\n`
+        }
+        
+        const tabCount = Object.keys(this.pageData[area].original).length
+        for (const tabname in this.pageData[area].original) {
+          const tab = this.pageData[area].original[tabname]
+          
+          if (tabCount === 1) {
+            raw += `${tab}\n` 
+            continue
+          } 
+          raw += `===${tabname}===\n${tab}\n\n`
+
+        }
+        if (area == 'full' && noPreview == false) {
+          raw += '\n----------------------------------------------------------------------\n'
+        }
+      } 
+
+      this.$emit('save-page', raw)
+
     },
     exit() {
       this.getNode("editor-box").classList.add("hide")
@@ -708,7 +777,7 @@ const editor = {
                      class="input width-100"
                      placeholder="/">
               <datalist id="exampleList">
-                <option value="Edge"/>
+                <!-- <option value="Edge" v-for="(value, name) in pageData"/> -->
                 <option value="Firefox"/>
                 <option value="Chrome"/>
                 <option value="Opera"/>
@@ -718,7 +787,8 @@ const editor = {
         </div>
         <!-- Textarea -->
         <textarea name="background-color: white;" id="textarea"
-                  placeholder="Write here..."></textarea>      
+                  placeholder="Write here..."
+                  @change="saveTextArea"></textarea>      
       </div>
 
       <!-- Settings -->
@@ -727,19 +797,20 @@ const editor = {
         <!-- Mode buttons -->
         <span class="flex">
           <!-- <label>Mode</label> -->
-          <button class="btn btn-active">Full</button>
-          <button class="btn">Preview</button>
+          <button class="btn btn-active" id="btn-full" @click="changeArea('full')">Full</button>
+          <button class="btn" id="btn-preview" @click="changeArea('preview')">Preview</button>
         </span>
 
-        <button class="btn">Edit Profile</button>
+        <button class="btn" @click="editProfile">Edit Profile</button>
 
         <!-- Select Tab -->
         <div class="tab-options flex flex-c mt-15">
           <label>Tabs</label>
           <!-- Dropdown -->
-          <select id="tab-select">
-              <option value="ActionScript">ActionScript</option>
-              <option value="AppleScript">AppleScript</option>
+          <select id="tab-select" @change="changeTab">
+              <option :value="name" v-for="(value, name) in currentAreaObj.tabs">
+                {{ name }}
+              </option>
           </select>
 
           <!-- Edit -->
@@ -766,7 +837,7 @@ const editor = {
 
 
         <div class="flex float-bottom width-100">
-          <button class="btn btn-green">Save</button>
+          <button class="btn btn-green" @click="save">Save</button>
           <button class="btn btn-red" @click="exit">Exit</button>
         </div>
       </div>

@@ -35,6 +35,7 @@ const card = {
   watch: {
     content: {
       immediate: true,
+      deep: true,
       async handler(value) {      
         // Return if value is empty
         if (value == '') return  
@@ -58,12 +59,14 @@ const card = {
         }
 
         for (const area in areas) {
-          let [content, profile] = this.loadProfile(areas[area])
+          let [content, profile, profileOriginal] = this.loadProfile(areas[area])
 
           this.areas[area].profile = profile
           const [tabs, tabsOriginal] = this.createContent(content, this.directory)
+
           this.areas[area].tabs = tabs
           this.areas[area].original = tabsOriginal
+          this.areas[area].profileOriginal = profileOriginal
         }
 
         // Refresh
@@ -73,6 +76,7 @@ const card = {
         this.toggleArea()
 
         this.$emit('processed-content', this.areas)
+        console.log("emitted")
       }
     },
     toggleState: {
@@ -124,15 +128,16 @@ const card = {
       return [results, original];
     },
     loadProfile(value) {
-      if (!this.hasData(value)) return [value, {}];
+      if (!this.hasData(value)) return [value, {}, ""];
       
       // Separate content and profile
       const parts = value.split(this.profileDivisor);
       
+      const profileText = parts[1].replace(/=/g, "").trim()
       // Load yaml
       let profile = {};
       try {
-        profile = jsyaml.load(autoLink(parts[1].replace(/=/g, "").trim(), this.directory), 'utf8');
+        profile = jsyaml.load(autoLink(profileText, this.directory), 'utf8');
       } catch (error) {
         conesole.log("Bad YAML Data on .md file");
         return [value, {}];
@@ -141,7 +146,7 @@ const card = {
       // Load content
       const content = parts[2].trim();
     
-      return [content, profile];
+      return [content, profile, profileText];
    },
     makeTOC() {
       const tabs = document.getElementsByClassName("tab")

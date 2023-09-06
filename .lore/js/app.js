@@ -21,9 +21,6 @@ function start() {
         content: "",
         pageName: "",
 
-        // Editor
-        areas: {}
-
       }
     },
     async mounted() {
@@ -63,10 +60,17 @@ function start() {
 
     },
     methods: {
-      async reload(pageId, isPopState = false) {
+      async reload(pageId, isPopState = false, savePage="") {
+
+        
+
         // Prevents repeated history when the same page button is clicked
-        if (!isPopState && pageId === historyList[globalPosition]) return;
-      
+        if (savePage == "") {
+          if (!isPopState && pageId === historyList[globalPosition]) return;
+        }
+        
+        console.log("thisss")
+        
         // Deal with Global Positioning
         if (globalPosition === null) globalPosition = 0;
         else if (!isPopState) globalPosition += 1;
@@ -82,19 +86,26 @@ function start() {
         let isError = false;
         let pageMeta = this.directory[pageId] || this.directory["404"];
         if (!this.directory.hasOwnProperty(pageId)) isError = true;
-      
-        // Update Card Content
-        const resp = await fetch(pageMeta.path);
+        
         this.pageName = pageMeta.title;
-      
-        if (resp.status === 404) {
-          this.content = `File <span class="error">${pageId}</span> is registered in metadata.json but does not exist`;
+
+        // Update Card Content
+        if (savePage == "") {
+          const resp = await fetch(pageMeta.path);
+          
+        
+          if (resp.status === 404) {
+            this.content = `File <span class="error">${pageId}</span> is registered in metadata.json but does not exist`;
+          } else {
+            this.content = (await resp.text()).trim() || "The Page is empty";
+          }
+        
+          if (isError) {
+            this.content += `\n\nPage <span class="error">${pageId}</span> does not exist.`;
+          }
+
         } else {
-          this.content = (await resp.text()).trim() || "The Page is empty";
-        }
-      
-        if (isError) {
-          this.content += `\n\nPage <span class="error">${pageId}</span> does not exist.`;
+          this.content = savePage.trim()
         }
       
         // Update App
@@ -103,9 +114,10 @@ function start() {
       getCurrentPageId() {
         return (new URLSearchParams(window.location.search)).get('p');
       },
-      async dataToEditor(areas) {
-        this.areas = areas;
-      } 
+      savePage(newPage) {
+        console.log("SAVE PAGE FUNC")
+        this.reload(this.getCurrentPageId(), false, newPage)
+      }
     }
   })
 

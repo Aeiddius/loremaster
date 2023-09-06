@@ -16,7 +16,7 @@
 <body onload="start()">
 
   <div id="app">
-    <Editor ref="editor" :directory="directory"></Editor>
+    <Editor ref="editor" :directory="directory" @save-page="savePage"></Editor>
     <Sidebarbtn>✢</Sidebarbtn>
     <div class="container full">
       
