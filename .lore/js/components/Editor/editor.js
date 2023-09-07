@@ -23,38 +23,34 @@ const editor = {
     directory: { type: Object, required: true }
   },
   methods: {
-
     start(value){
-      this.pageData = JSON.parse(JSON.stringify(value))  
+      this.pageData = copyobj(value)
       this.changeArea('full')
     },
     changeArea(area) {
+      // Set initial variables
       this.isCurrentProfile = false
       this.currentArea = area
       this.currentTab = Object.keys(this.pageData[area].original)[0]
       this.currentAreaObj = copyobj(this.pageData[area])
 
-
-
-      console.log(this.currentAreaObj)
-
       // Set <Tabs btn active>
       for (const ar of ['full', 'preview']) {
-        if (ar == area) {
-          this.getNode(`btn-${ar}`).classList.add("btn-active")
-        } else {
-          this.getNode(`btn-${ar}`).classList.remove("btn-active")
-        }
-        
+        if (ar == area) this.getNode(`btn-${ar}`).classList.add("btn-active")
+        else this.getNode(`btn-${ar}`).classList.remove("btn-active")
       }
 
+      // Create path directory
       const paths = [];
       for (const entryId in this.directory) {
         const entry = splitStringAtLast(this.directory[entryId].path, '/')[0]
-        if (paths.includes(entry)) continue
-        paths.push(entry)
+        if (!paths.includes(entry)) paths.push(entry)
       }
       this.pathChoices = paths.sort()
+
+      // Remove active status of btn-profile
+      this.getNode("btn-profile").classList.remove("btn-active")
+
       // Set <textarea>
       this.refreshTextArea()
     },
@@ -73,11 +69,12 @@ const editor = {
       if (this.isCurrentProfile == false) {
         this.isCurrentProfile = true
         this.getNode("textarea").value = `${this.currentAreaObj.profileOriginal}`
+        this.getNode("btn-profile").classList.add("btn-active")
       } else {
         this.isCurrentProfile = false 
         this.refreshTextArea()
+        this.getNode("btn-profile").classList.remove("btn-active")
       }
-
     },
     saveTextArea(event) {
       if (this.isCurrentProfile == false) {
@@ -87,74 +84,90 @@ const editor = {
         this.pageData[this.currentArea].profileOriginal = event.currentTarget.value
         this.currentAreaObj.profileOriginal = event.currentTarget.value
       }
-
-
-
-
     },
     save() {
-      let raw = ""
-
+      let newPage = ""
       // Check if preview is empty
-      let noPreview = false 
       const previewKeys = Object.keys(this.pageData['preview'].original)
-      if (previewKeys.length == 1 && previewKeys[0] == 'default' && this.pageData['preview'].original['default'].trim() == "") {
-          noPreview = true
-      }
-
+      const noPreview = (previewKeys.length == 1 &&
+                         previewKeys[0] == 'default' &&
+                         this.pageData['preview'].original['default'].trim() == "")
+                         ? true : false
       
-
+      // Process full and preview area
       for (const area of ['full', 'preview']) {
-        const profile = this.pageData[area].profileOriginal
-        if (profile.trim() != "") {
-          raw += `=============================\n${profile}\n=============================\n`
-        }
+
+        // Checks profile
+        const profile = this.pageData[area].profileOriginal.trim()
+        if (profile.trim() != "") newPage += `=============================\n${profile}\n=============================\n`
         
+        // Process tabs
         const tabCount = Object.keys(this.pageData[area].original).length
         for (const tabname in this.pageData[area].original) {
           const tab = this.pageData[area].original[tabname]
           
-          if (tabCount === 1) {
-            raw += `${tab}\n` 
-            continue
-          } 
-          raw += `===${tabname}===\n${tab}\n\n`
+          if (tabCount === 1) newPage += `${tab}\n` 
+          else newPage += `===${tabname}===\n${tab}\n\n`
+        }
 
-        }
-        if (area == 'full' && noPreview == false) {
-          raw += '\n----------------------------------------------------------------------\n'
-        }
+        // Checks if there's a preview
+        if (area == 'full' && noPreview == false) newPage += '\n----------------------------------------------------------------------\n'
       } 
 
-      console.log(raw)
-
-      this.$emit('save-page', raw)
+      // emits saved page
+      this.$emit('save-page', newPage)
     },
     tabNew() {
-      const value = this.getNode('tab-new-input').value.trim()
-      if (value === "") return
+      // Checks if new tab name is empty
+      const tabname = this.getNode('tab-new-input').value.trim()
+      if (tabname === "") return
 
+      // Checks if tabname exists already
       const tabs = Object.keys(this.currentAreaObj.original)
+      if (tabs.includes(tabname)) return
 
-      if (tabs.includes(value)) return
+      // Adds new tabname
+      this.pageData[this.currentArea].original[tabname] = ""
+      
+      // Refresh
+      this.changeArea(this.currentArea)
 
-      this.pageData[this.currentArea].original[value] = ""
-
+      // hide new tab
+      this.getNode('tab-new').classList.toggle('hide')
+      
+      this.getNode(`tab-new-btn`).classList.remove("btn-active")
     },
     tabRename() {
-      const value = this.getNode('tab-rename-input').value.trim()
-      if (value === "") return
+      // Checks if renamed tab is empty
+      const tabname = this.getNode('tab-rename-input').value.trim()
+      if (tabname === "") return
 
-      const curTabVal = `${this.pageData[this.currentArea].original[this.currentTab]}`
+      // Checks if tabname exists already
+      const tabs = Object.keys(this.currentAreaObj.original)
+      if (tabs.includes(tabname)) return
 
-      this.pageData[this.currentArea].original[value] = curTabVal
+      // Save current tab
+      this.pageData[this.currentArea].original[tabname] = `${this.pageData[this.currentArea].original[this.currentTab]}`
+      
+      // Delete tab
       delete this.pageData[this.currentArea].original[this.currentTab]
 
-
+      // Refresh
       this.changeArea(this.currentArea)
-      this.refreshTextArea()
-    },
 
+      // Hide rename tab
+      this.getNode('tab-rename').classList.toggle('hide')
+
+      this.getNode(`tab-rename-btn`).classList.remove("btn-active")
+    },
+    openTabbtn(id) {
+      this.getNode(`tab-${id}-btn`).classList.toggle("btn-active")
+      this.getNode(`tab-${id}`).classList.toggle('hide')
+    },
+    closeTabbtn(id) {
+      this.getNode(`tab-${id}-btn`).classList.remove("btn-active")
+      this.getNode(`tab-${id}`).classList.add('hide')
+    },
     exit() {
       this.getNode("editor-box").classList.add("hide")
     },
@@ -163,19 +176,7 @@ const editor = {
     }
   },
   template: `
-  <div id="editor-box" class="editor-container">
-    
-
-
-
-
-    <EditorTab/>
-
-
-
-
-
-
+  <div id="editor-box" class="editor-container hide">
     <div id="editor" class="flex">      
       <!-- Text Input Area -->
       <div class="textbox">
@@ -210,7 +211,7 @@ const editor = {
           <button class="btn" id="btn-preview" @click="changeArea('preview')">Preview</button>
         </span>
 
-        <button class="btn" @click="editProfile">Edit Profile</button>
+        <button class="btn" @click="editProfile" id="btn-profile">Edit Profile</button>
 
         <!-- Select Tab -->
         <div class="tab-options flex flex-c mt-15">
@@ -224,8 +225,8 @@ const editor = {
 
           <!-- Edit -->
           <span class="flex">
-            <button class="btn" @click="getNode('tab-new').classList.toggle('hide')">New</button>
-            <button class="btn" @click="getNode('tab-rename').classList.toggle('hide')">Rename</button>
+            <button class="btn" id="tab-new-btn" @click="openTabbtn('new')">New</button>
+            <button class="btn" id="tab-rename-btn" @click="openTabbtn('rename')">Rename</button>
           </span>
           <button class="btn">Delete</button>
         </div>
@@ -254,7 +255,7 @@ const editor = {
 
           <div class="flex">
             <button class="btn" @click="tabNew">Ok</button>
-            <button class="btn" @click="getNode('tab-new').classList.add('hide')">Cancel</button>
+            <button class="btn" @click="closeTabbtn('new')">Cancel</button>
           </div>
         </div>       
 
@@ -267,7 +268,7 @@ const editor = {
 
           <div class="flex">
             <button class="btn" @click="tabRename">Ok</button>
-            <button class="btn" @click="getNode('tab-rename').classList.add('hide')">Cancel</button>
+            <button class="btn" @click="closeTabbtn('rename')">Cancel</button>
           </div>
         </div>       
 

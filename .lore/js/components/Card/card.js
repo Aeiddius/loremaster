@@ -92,25 +92,15 @@ const card = {
       let results = {};
       let original = {}
       const regex = /===(?!.*===)([^=]+)===/
-
       if (regex.test(value)) {
-        // Split text by "===", remove empty sections
-        const sections = value.split("===").filter(section => section.trim() !== ""); 
-        console.log(sections)
-        // Loop through sections by index, incrementing by  2 to pair headers and content
-        for (let i = 0; i < sections.length; i += 2) {
-          // Get the section header and convert to lowercase
-          
-          const key = sections[i].trim(); 
-          
-          // Get the section content
-          if ((i+1) == sections.length) {
-            results[key] = " "
-            break 
-          }
-          const value = sections[i + 1].trim(); 
-          // Assign the section header as a key and content as the corresponding value in the object
-          results[key] = value; 
+
+        let raw = value.split(/===(.+?)===/gm)
+        raw.shift()
+        for (let i=0; i < raw.length; i+=2) {
+          const tabname = raw[i]
+          const content = raw[i+1]
+    
+          results[tabname] = content; 
         }
         
         // Parse data
