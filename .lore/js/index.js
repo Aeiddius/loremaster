@@ -21,6 +21,7 @@ function start() {
         // Card
         content: "",
         pageName: "",
+        pageId: "",
 
       }
     },
@@ -66,9 +67,7 @@ function start() {
         if (savePage == "") {
           if (!isPopState && pageId === historyList[globalPosition]) return;
         }
-        
-        console.log("thisss")
-        
+                
         // Deal with Global Positioning
         if (globalPosition === null) globalPosition = 0;
         else if (!isPopState) globalPosition += 1;
@@ -105,6 +104,8 @@ function start() {
         } else {
           this.content = savePage.trim()
         }
+
+        this.pageId = pageId
       
         // Update App
         this.$forceUpdate();
@@ -381,9 +382,51 @@ function splitStringAtLast(inputString, delimiter) {
 // ==================
 const breadcrumbs = {
   name: "BreadCrumbs",
+  data() {
+    return {
+      crumbs: []
+    }
+  },
+  props: {
+    directory: { type: Object, required: true },
+    pageId: { type: String }
+  },
+  watch: {
+    pageId: {
+      handler(value) {
+        
+        const parent = this.directory[this.pageId].parent 
+        
+        let crumbs = []
+        const search = (page) => {
+          if (!this.directory.hasOwnProperty(page)) return
+          crumbs.unshift(page)
+          
+          const entry = this.directory[page].parent.trim()
+          if (entry == "") return
+          search(entry)
+        }
+
+        search(parent)
+        
+        crumbs.push(this.pageId)
+        
+        this.crumbs = crumbs
+      }
+    }
+  },
+  methods: {
+    link(value) {
+      return autoLink(`[[${value}]]`, this.directory)
+      
+    }
+  },
   template: `
   <div class="breadcrumbs">
-    Story > The Birth of a Hero > Characters > Ethan Morales
+    <template v-for="(value, index) in crumbs">
+      <span v-html="link(value)"></span>
+       <template v-if="index + 1 != crumbs.length"> » </template>
+    </template>
   </div>
   `
 }
@@ -416,6 +459,7 @@ const card = {
   emits: ['processed-content'],
   props: {
     title: { type: String, default: "Ethan Morales" },
+    pageId: { type: String },
     content: { type: String },
     directory: { type: Object, required: true },
     toggleState: { type: Boolean }
@@ -465,7 +509,6 @@ const card = {
         this.toggleArea()
 
         this.$emit('processed-content', this.areas)
-        console.log("emitted")
       }
     },
     toggleState: {
@@ -602,7 +645,7 @@ const card = {
       </h1>
       
       <div class="card">
-        <BreadCrumbs/>
+        <BreadCrumbs :directory="directory" :page-id="pageId"/>
 
         <div v-for="(area, name, index) in areas"
              v-if="rerender"

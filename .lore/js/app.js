@@ -20,6 +20,7 @@ function start() {
         // Card
         content: "",
         pageName: "",
+        pageId: "",
 
       }
     },
@@ -65,9 +66,7 @@ function start() {
         if (savePage == "") {
           if (!isPopState && pageId === historyList[globalPosition]) return;
         }
-        
-        console.log("thisss")
-        
+                
         // Deal with Global Positioning
         if (globalPosition === null) globalPosition = 0;
         else if (!isPopState) globalPosition += 1;
@@ -104,6 +103,8 @@ function start() {
         } else {
           this.content = savePage.trim()
         }
+
+        this.pageId = pageId
       
         // Update App
         this.$forceUpdate();

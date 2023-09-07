@@ -27,6 +27,7 @@ const card = {
   emits: ['processed-content'],
   props: {
     title: { type: String, default: "Ethan Morales" },
+    pageId: { type: String },
     content: { type: String },
     directory: { type: Object, required: true },
     toggleState: { type: Boolean }
@@ -76,7 +77,6 @@ const card = {
         this.toggleArea()
 
         this.$emit('processed-content', this.areas)
-        console.log("emitted")
       }
     },
     toggleState: {
@@ -213,7 +213,7 @@ const card = {
       </h1>
       
       <div class="card">
-        <BreadCrumbs/>
+        <BreadCrumbs :directory="directory" :page-id="pageId"/>
 
         <div v-for="(area, name, index) in areas"
              v-if="rerender"
