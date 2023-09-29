@@ -99,9 +99,8 @@ const sidebar = {
           <!-- Main Button -->
           <span v-html="value.main"
                 :class="['button--mainnav', isCurrentNav== getNameClean(name) ? 'button--active' : '']"
-                @mouseover="expand(name + '-navid')"
-                
                 ></span> 
+                <!-- @mouseover="expand(name + '-navid')" -->
           <button v-if="Object.keys(value.subnav).length != 0"
                   class="button button--showsub" 
                   @click="toggleSubNav(name + '-navid')">
@@ -111,9 +110,8 @@ const sidebar = {
           <!-- Sub button -->
           <div v-if="Object.keys(value.subnav).length != 0"
                class="button--subnav hide-subnav"
-               :id="name + '-navid'"
-               @mouseleave="collapse(name + '-navid')">
-
+               :id="name + '-navid'">
+               <!-- @mouseleave="collapse(name + '-navid')" -->
             <template v-for="(valuesub, namesub, indexsub) in value.subnav">
               <span v-html="valuesub" class="button--mainnav"></span> 
               <br>

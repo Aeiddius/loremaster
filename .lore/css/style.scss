@@ -20,7 +20,7 @@ html {
 }
 
 body {
-  background-color: $dark;
+  background-color: white;
 
   &::-webkit-scrollbar {
     width: 0.5em;
@@ -38,8 +38,7 @@ body {
 
 .container {
   display: flex;
-  justify-content: center; 
-  align-items: center;
+  width: 100vw;
 }
 
 .full {

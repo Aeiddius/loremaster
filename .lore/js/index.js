@@ -19,7 +19,7 @@ function start() {
         projectSubtitle: "",
         
         // Card
-        content: "",
+        content: {},
         pageName: "",
         pageId: "",
 
@@ -92,14 +92,15 @@ function start() {
           
         
           if (resp.status === 404) {
-            this.content = `File <span class="error">${pageId}</span> is registered in metadata.json but does not exist`;
+            this.content = createContentObj(`File <span class="error">${pageId}</span> is registered in metadata.json but does not exist`);
           } else {
-            this.content = (await resp.text()).trim() || "The Page is empty";
+            this.content = (await resp.json())|| createContentObj("The Page is empty");
+            // console.log(this.content)
           }
-        
-          if (isError) {
-            this.content += `\n\nPage <span class="error">${pageId}</span> does not exist.`;
-          }
+
+          // if (isError) {
+          //   this.content += `\n\nPage <span class="error">${pageId}</span> does not exist.`;
+          // }
 
         } else {
           this.content = savePage.trim()
@@ -284,6 +285,22 @@ function copyobj(obj) {
   return JSON.parse(JSON.stringify(obj)) 
 }
 
+function createContentObj(content) {
+  return {
+    areas: {
+      full: {
+        tabs: {
+          default: content
+        }
+      }
+    }
+  }
+}
+
+function isObjEmpty(obj) {
+  return Object.keys(obj).length == 0;
+}
+
 var globalIdList = []
 
 function makeid(length) {
@@ -395,6 +412,12 @@ const breadcrumbs = {
     pageId: {
       handler(value) {
         
+        try {
+          this.directory[this.pageId].parent 
+        } catch (error) {
+          console.log(`${this.pageId} has no parent ("" is default). page most likely does not exist. check metadata.json`)
+          return
+        }
         const parent = this.directory[this.pageId].parent 
         
         let crumbs = []
@@ -422,7 +445,7 @@ const breadcrumbs = {
     }
   },
   template: `
-  <div class="breadcrumbs">
+  <div class="breadcrumbs" v-if="crumbs.length != 1">
     <template v-for="(value, index) in crumbs">
       <span v-html="link(value)"></span>
        <template v-if="index + 1 != crumbs.length"> » </template>
@@ -449,18 +472,13 @@ const card = {
 
       // Misc
       rerender: true,
-      noPreview: false,
-
-      // Divisors
-      profileDivisor: "=============================",
-      fullDivisor: "----------------------------------------------------------------------",
     }
   },
   emits: ['processed-content'],
   props: {
     title: { type: String, default: "Ethan Morales" },
     pageId: { type: String },
-    content: { type: String },
+    content: { type: Object },
     directory: { type: Object, required: true },
     toggleState: { type: Boolean }
   },
@@ -471,44 +489,36 @@ const card = {
       deep: true,
       async handler(value) {      
         // Return if value is empty
-        if (value == '') return  
+        if (isObjEmpty(value)) return  
+        
+        let areas = copyobj(value['areas'])
 
-        // Refresh
-        this.profile = {}
-
-        // Start
-        const [fullContents, previewContent] = value.split(this.fullDivisor).slice(0, 2);
-
-        // Checks if there is no preview
-        if (previewContent == undefined || previewContent.trim().length == 0 ) {
-          this.noPreview = true;
-        } else {
-          this.noPreview = false;
-        }
-
-        const areas = {
-          'full': fullContents.trim(), 
-          'preview': previewContent == undefined ? "" : previewContent.trim()
-        }
-
+        
+        console.log(areas)
         for (const area in areas) {
-          let [content, profile, profileOriginal] = this.loadProfile(areas[area])
+          for (const tab in areas[area].tabs) {
+            
+            let content = areas[area].tabs[tab]
 
-          this.areas[area].profile = profile
-          const [tabs, tabsOriginal] = this.createContent(content, this.directory)
+            content = content.trim()
 
-          this.areas[area].tabs = tabs
-          this.areas[area].original = tabsOriginal
-          this.areas[area].profileOriginal = profileOriginal
-        } 
+            content = this.renderMD(content)
+
+            content = autoLink(content, this.directory)
+
+            areas[area].tabs[tab] = content
+          }
+        }
+        this.areas = areas
+        console.log(this.areas)
 
         // Refresh
         await this.refresh()
-        this.fixQuote()
+
         this.makeTOC()
         this.toggleArea()
 
-        this.$emit('processed-content', this.areas)
+        // this.$emit('processed-content', this.areas)
       }
     },
     toggleState: {
@@ -519,41 +529,66 @@ const card = {
     }
   },
   methods: {
-    createContent(value, directory) {
 
-      let results = {};
-      let original = {}
-      const regex = /===(?!.*===)([^=]+)===/
-      if (regex.test(value)) {
+    renderMD(value) {
 
-        let raw = value.split(/===(.+?)===/gm)
-        raw.shift()
-        for (let i=0; i < raw.length; i+=2) {
-          const tabname = raw[i]
-          const content = raw[i+1]
-    
-          results[tabname] = content; 
+      let md = value.trim().split(/\n/gm)
+      let html = ``
+      for (const l of md) {
+        let line = l.trim()
+
+        // if empty line
+        if (line == "") {
+          html += `<p>&nbsp</p>\n`
+          continue
         }
-        
-        // Parse data
-        for (const name in results) {
-          // Convert md into html
-          original[name] = results[name].trim()
-          results[name] = results[name].replace(/\n/gm, "\n\n")
-          results[name] = marked.parse(results[name]);
 
-          // convert custom components into html
-          results[name] = autoLink(results[name], directory)
-
-          
+        // Render Headers
+        const hres = line.match(/(#+)\s/);
+        if (hres) {
+          const h = hres[0].length
+          html += `<h${h}>${hres.input.replace(/\#/g,'').trim()}</h${h}>`
+          continue
         }
-      } else {
-        // if there is no tabs
-        original["default"] = value.trim()
-        results["default"] = marked.parse(value.replace(/\n/gm, "\n\n"));
-        results["default"] = autoLink(results["default"], directory)
+
+
+        // Renders Bold
+        const bold = [...line.matchAll(/\*\*(.*?)\*\*/g)];
+        if (bold.length != 0) {
+          for (const b of bold) {
+            console.log(b[0])
+            line = line.replace(b[0], `<b>${b[1]}</b>`)
+          }
+        }
+
+        // Renders italic
+        const italic = [...line.matchAll(/\*(.*?)\*/g)];
+        if (italic.length != 0) {
+          for (const i of italic) {
+            console.log(i[0])
+            line = line.replace(i[0], `<i>${i[1]}</i>`)
+          }
+        }
+
+
+        // Renders List
+        const list = line.match(/^\* /)
+        if (list) {
+          line = `<li>${line.replace("* ", "").trim()}</li>`
+        }
+
+        // Renders List
+        const quote = line.match(/^\> /)
+        if (quote) {
+          line = `<blockquote>${line.replace("> ", "").trim()}</blockquote>`
+        }
+
+        // Add to page
+        html += `<p>${line}</p>\n`
       }
-      return [results, original];
+
+      
+      return html
     },
     loadProfile(value) {
       if (!this.hasData(value)) return [value, {}, ""];
@@ -586,14 +621,17 @@ const card = {
 
         for (const head of headers) {
           head.id = head.innerText.replace(" ", "-").toLowerCase()
-          toc += `<a class="button button--toc ${head.tagName}" href="#${head.id}">${head.innerText}</a>\n`
+          toc += `<a class="button button--toc ${head.tagName}" onclick="document.querySelector('#${head.id}').scrollIntoView();">${head.innerText}</a>\n`
         } 
-          
-        document.getElementById(tab.id).innerHTML = tab.innerHTML.replace("[[toc]]", 
-        `<div class="toc">
-          <h1 class="toc-title">Table of Contents</h1>
-          ${toc}
-        </div>`)
+        
+
+        const toc_content = `<div class="toc">
+                              <h1 class="toc-title">Table of Contents</h1>
+                              ${toc}
+                            </div>`
+        document.getElementById(tab.id).innerHTML = tab.innerHTML.replace("[[toc]]", toc_content)
+
+        
       }
     },
     // Check if There is a data for profiles inside
@@ -609,27 +647,28 @@ const card = {
       return false;
     },
 
-    fixQuote() {
-      const blockquote = document.getElementById("card-content").getElementsByTagName("blockquote")
-      if (blockquote.length != 0) {
-        for (const quote of blockquote) {
-          quote.innerHTML = quote.innerHTML.replace(' - ', '<br> - ')
-        }
-      }
-    },
+
     async refresh() {
       this.rerender = false;
       await Vue.nextTick()
       this.rerender = true;
     },
     isProfileExist(area) {
-      return Object.keys(this.areas[area].profile).length != 0
+      if (!this.areas[area].hasOwnProperty("profile")) {
+        return false
+      } else {
+        return Object.keys(this.areas[area].profile).length != 0
+      }
     },
     toggleArea() {
       const fullArea = document.getElementById("full-area");
       const previewArea = document.getElementById("preview-area");
+
+      if (!previewArea) {
+        return
+      }
       
-      if (this.noPreview || this.toggleState) {
+      if (this.toggleState) {
         fullArea.classList.remove("hide");
         previewArea.classList.add("hide");
       } else {
@@ -640,11 +679,13 @@ const card = {
   },
   template: `
     <div class="card-container">
-      <h1 id="title">
-        {{ title }} 
-      </h1>
+
       
       <div class="card">
+        <h1 id="title">
+          {{ title }} 
+        </h1>
+
         <BreadCrumbs :directory="directory" :page-id="pageId"/>
 
         <div v-for="(area, name, index) in areas"
@@ -659,6 +700,12 @@ const card = {
         </div>
 
       </div>
+
+      
+      <div id="side-toc">
+        
+      </div>
+
     </div>
   ` 
 }
@@ -1216,9 +1263,8 @@ const sidebar = {
           <!-- Main Button -->
           <span v-html="value.main"
                 :class="['button--mainnav', isCurrentNav== getNameClean(name) ? 'button--active' : '']"
-                @mouseover="expand(name + '-navid')"
-                
                 ></span> 
+                <!-- @mouseover="expand(name + '-navid')" -->
           <button v-if="Object.keys(value.subnav).length != 0"
                   class="button button--showsub" 
                   @click="toggleSubNav(name + '-navid')">
@@ -1228,9 +1274,8 @@ const sidebar = {
           <!-- Sub button -->
           <div v-if="Object.keys(value.subnav).length != 0"
                class="button--subnav hide-subnav"
-               :id="name + '-navid'"
-               @mouseleave="collapse(name + '-navid')">
-
+               :id="name + '-navid'">
+               <!-- @mouseleave="collapse(name + '-navid')" -->
             <template v-for="(valuesub, namesub, indexsub) in value.subnav">
               <span v-html="valuesub" class="button--mainnav"></span> 
               <br>
