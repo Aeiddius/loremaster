@@ -8,6 +8,7 @@ $sidebar--bg: $black;
   height: 100%;
   min-height: 400px;
 
+
   // Misc
   z-index:  1;
 }
@@ -17,6 +18,7 @@ $sidebar--bg: $black;
 }
 
 .user {
+  width: 250px;
   margin-left: 40px;
   padding: 20px;
   padding-left: 10px;

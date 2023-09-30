@@ -10,7 +10,7 @@ const sidebarbtn = {
   },
   methods: {
     openSidebar() {
-       
+      
       if (this.pos.style.left == "0px") {
         this.sideClose()
       } else {

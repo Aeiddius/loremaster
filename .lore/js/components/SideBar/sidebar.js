@@ -6,7 +6,7 @@ const sidebar = {
       test: "Asd",
     }
   },
-  components: ['Searchbox', 'Toggle'],
+  components: ['Searchbox', 'Toggle', 'Editbar'],
   computed: {
     isCurrentNav() {
       let pageId = (new URLSearchParams(window.location.search)).get('p')
@@ -75,25 +75,21 @@ const sidebar = {
       if (subnav) {
         subnav.classList.add("hide-subnav")
       }
-    }
+    },
   },
   template: `
   
   <div class="sidebar" >
 
     <div class="editor-bar">
-    <Sidebarbtn></Sidebarbtn>
-    <SidebarEdit></SidebarEdit>
-    </div>
+      <Sidebarbtn></Sidebarbtn>
+      <SidebarEdit></SidebarEdit>
+    </div> 
 
 
     <div class="user" id="sidebarobj" style="left: 0px;">
 
-      <div id="editmode">
-        <!-- <button class="button--edit" @click="open">Edit Page</button>
-        <button class="button--edit">Add Page</button>
-        <button class="button--edit button--edit-red">Delete Page</button> -->
-      </div>
+      <Editbar/>
 
       <div id="navigation">
         <button class="close" @click="closeSidebar">✕</button>

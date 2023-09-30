@@ -453,63 +453,6 @@ summary {
   width: 250px;
 }
 
-.editbar {
-  position: fixed;
-  top: 0px;
-  right: 100px;
-  width: 180px;
-  height: 90vh;
-  min-height: 400px;
-  padding: 20px;
-  padding-top: 100px;
-  border-radius: 20px;
-  border-top-right-radius: 0px;
-  border-top-left-radius: 0px;
-  background-color: transparent;
-  color: white;
-  z-index: 999;
-  transition: 0.5s ease-in-out;
-}
-.editbar h1 {
-  font-size: 17px;
-  font-weight: 100;
-}
-.editbar .buttons {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-}
-
-.button--edit {
-  padding: 5px 10px 5px 10px;
-  margin-right: 5px;
-  border: none;
-  border-radius: 5px;
-  width: 100%;
-  background-color: #4584FF;
-  color: white;
-  transition: 0.1s linear;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
-  cursor: pointer;
-  font-weight: 100 !important;
-  font-style: normal;
-  font-size: 14px;
-}
-.button--edit:hover {
-  transform: scale(1.1);
-}
-.button--edit:active {
-  transform: scale(0.9);
-}
-
-.button--edit-red {
-  background-color: #F44336 !important;
-}
-
 .editor-container {
   position: fixed;
   background-color: rgba(0, 0, 0, 0.36);
@@ -757,6 +700,44 @@ summary {
   background-color: #4584FF;
 }
 
+#editmode {
+  width: -moz-fit-content;
+  width: fit-content;
+  height: 100%;
+}
+
+.button--edit {
+  border: none;
+  border-radius: 5px;
+  background-color: #4584FF;
+  color: white;
+  transition: 0.1s linear;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
+  cursor: pointer;
+  font-weight: 100 !important;
+  font-style: normal;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+.button--edit:hover {
+  outline: 2px solid white;
+}
+.button--edit:active {
+  background-color: rgba(69, 132, 255, 0.7);
+}
+
+.button--edit-red {
+  background-color: #F44336 !important;
+}
+.button--edit-red:hover {
+  outline: 2px solid white;
+}
+.button--edit-red:active {
+  background-color: rgba(244, 67, 54, 0.7) !important;
+}
+
 .sidebar {
   position: fixed;
   height: 100%;
@@ -769,6 +750,7 @@ summary {
 }
 
 .user {
+  width: 250px;
   margin-left: 40px;
   padding: 20px;
   padding-left: 10px;
