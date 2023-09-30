@@ -47,7 +47,10 @@ const sidebarbtn = {
       
       // Negative - Openig to the right
       if (this.lastWidth - window.innerWidth < 0) {
-        
+        // if (this.isOpen() == true) {
+
+        //   return
+        // }
         
         // Positive - Closing to the left
       } else if (this.lastWidth - window.innerWidth > 0) {

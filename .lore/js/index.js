@@ -92,7 +92,8 @@ function start() {
           
         
           if (resp.status === 404) {
-            this.content = createContentObj(`File <span class="error">${pageId}</span> is registered in metadata.json but does not exist`);
+            // this.content = createContentObj(`File <span class="error">${pageId}</span> is registered in metadata.json but does not exist`);
+            this.content = createContentObj(`Page <span class="error">${pageId}</span> does not exist`);
           } else {
             this.content = (await resp.json())|| createContentObj("The Page is empty");
             // console.log(this.content)
@@ -1360,7 +1361,10 @@ const sidebarbtn = {
       
       // Negative - Openig to the right
       if (this.lastWidth - window.innerWidth < 0) {
-        
+        // if (this.isOpen() == true) {
+
+        //   return
+        // }
         
         // Positive - Closing to the left
       } else if (this.lastWidth - window.innerWidth > 0) {
