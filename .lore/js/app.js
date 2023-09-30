@@ -103,7 +103,8 @@ function start() {
           // }
 
         } else {
-          this.content = savePage.trim()
+          this.content = savePage
+          console.log("this is called")
         }
 
         this.pageId = pageId
@@ -118,6 +119,7 @@ function start() {
         return pageId
       },
       savePage(newPage) {
+
         this.reload(this.getCurrentPageId(), false, newPage)
       }
     }

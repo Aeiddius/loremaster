@@ -104,7 +104,8 @@ function start() {
           // }
 
         } else {
-          this.content = savePage.trim()
+          this.content = savePage
+          console.log("this is called")
         }
 
         this.pageId = pageId
@@ -119,6 +120,7 @@ function start() {
         return pageId
       },
       savePage(newPage) {
+
         this.reload(this.getCurrentPageId(), false, newPage)
       }
     }
@@ -492,10 +494,21 @@ const card = {
         // Return if value is empty
         if (isObjEmpty(value)) return  
         
+        // Unnecessarily complcated preview removal.        Massive SKILL ISSUE lmao it works
         let areas = copyobj(value['areas'])
+        if (areas.hasOwnProperty("preview")) {
+          const length = Object.keys(areas["preview"].tabs).length
+          if (length == 1) {
+            const tabName = Object.keys(areas["preview"].tabs)[0]
+            if (areas["preview"].tabs[tabName].trim().length == 0) {
+              delete areas["preview"]
+            }
+          } else if (length == 0) {
+            delete areas["preview"]
+          }
 
-        
-        console.log(areas)
+        }
+
         for (const area in areas) {
           for (const tab in areas[area].tabs) {
             
@@ -511,7 +524,6 @@ const card = {
           }
         }
         this.areas = areas
-        console.log(this.areas)
 
         // Refresh
         await this.refresh()
@@ -519,7 +531,7 @@ const card = {
         this.makeTOC()
         this.toggleArea()
 
-        // this.$emit('processed-content', this.areas)
+        this.$emit('processed-content', value)
       }
     },
     toggleState: {
@@ -772,14 +784,25 @@ const editor = {
   },
   methods: {
     start(value){
-      this.pageData = copyobj(value)
+      this.pageData = copyobj(value["areas"])
+
+
       this.changeArea('full')
     },
     changeArea(area) {
+
+      if (area == "preview" && !this.pageData.hasOwnProperty("preview")) {
+        this.pageData["preview"] = {
+          tabs: {
+            "default": ""
+          }
+        }
+      }
+
       // Set initial variables
       this.isCurrentProfile = false
       this.currentArea = area
-      this.currentTab = Object.keys(this.pageData[area].original)[0]
+      this.currentTab = Object.keys(this.pageData[area].tabs)[0]
       this.currentAreaObj = copyobj(this.pageData[area])
 
       // Set <Tabs btn active>
@@ -799,24 +822,36 @@ const editor = {
       // Remove active status of btn-profile
       this.getNode("btn-profile").classList.remove("btn-active")
 
+      document.getElementById("tab-rename-input").value = this.currentTab
+
       // Set <textarea>
       this.refreshTextArea()
     },
     changeTab(event) {
       // Save the last area
       this.isCurrentProfile = false
-      const newTab = event.currentTarget.value
-      this.currentTab = newTab
 
+      let newTab = ""
+      if (event instanceof Event) {
+        newTab = event.currentTarget.value
+      } else {
+        newTab = event
+      }
+
+      this.currentTab = newTab
+      
+      document.getElementById("tab-rename-input").value = newTab
       this.refreshTextArea()
+
+      
     },
     refreshTextArea(){
-      this.getNode("textarea").value = `${this.currentAreaObj.original[this.currentTab]}`
+      this.getNode("textarea").value = `${this.currentAreaObj.tabs[this.currentTab]}`
     },
     editProfile() {
       if (this.isCurrentProfile == false) {
         this.isCurrentProfile = true
-        this.getNode("textarea").value = `${this.currentAreaObj.profileOriginal}`
+        this.getNode("textarea").value = `${jsyaml.dump(this.currentAreaObj.profile, 'utf8')}`
         this.getNode("btn-profile").classList.add("btn-active")
       } else {
         this.isCurrentProfile = false 
@@ -826,41 +861,27 @@ const editor = {
     },
     saveTextArea(event) {
       if (this.isCurrentProfile == false) {
-        this.pageData[this.currentArea].original[this.currentTab] = event.currentTarget.value
-        this.currentAreaObj.original[this.currentTab] = event.currentTarget.value
+        this.pageData[this.currentArea].tabs[this.currentTab] = event.currentTarget.value
+        this.currentAreaObj.tabs[this.currentTab] = event.currentTarget.value
       } else {
-        this.pageData[this.currentArea].profileOriginal = event.currentTarget.value
-        this.currentAreaObj.profileOriginal = event.currentTarget.value
+        const profile =  jsyaml.load(event.currentTarget.value.trim(), 'utf8')
+        this.pageData[this.currentArea].profile = profile
+        this.currentAreaObj.profile = profile
       }
+      console.log(this.pageData)
     },
     save() {
-      let newPage = ""
-      // Check if preview is empty
-      const previewKeys = Object.keys(this.pageData['preview'].original)
-      const noPreview = (previewKeys.length == 1 &&
-                         previewKeys[0] == 'default' &&
-                         this.pageData['preview'].original['default'].trim() == "")
-                         ? true : false
-      
-      // Process full and preview area
-      for (const area of ['full', 'preview']) {
+      const tags = document.getElementById("tags-input").value  
+      const parent = document.getElementById("parent-input").value
+      const path = document.getElementById("input-path").value
 
-        // Checks profile
-        const profile = this.pageData[area].profileOriginal.trim()
-        if (profile.trim() != "") newPage += `=============================\n${profile}\n=============================\n`
-        
-        // Process tabs
-        const tabCount = Object.keys(this.pageData[area].original).length
-        for (const tabname in this.pageData[area].original) {
-          const tab = this.pageData[area].original[tabname]
-          
-          if (tabCount === 1) newPage += `${tab}\n` 
-          else newPage += `===${tabname}===\n${tab}\n\n`
-        }
+      let newPage = {
+        "areas": this.pageData,
+        "tags": tags,
+        "parent": parent,
+        "path": path
+      }
 
-        // Checks if there's a preview
-        if (area == 'full' && noPreview == false) newPage += '\n----------------------------------------------------------------------\n'
-      } 
 
       // emits saved page
       this.$emit('save-page', newPage)
@@ -871,11 +892,11 @@ const editor = {
       if (tabname === "") return
 
       // Checks if tabname exists already
-      const tabs = Object.keys(this.currentAreaObj.original)
+      const tabs = Object.keys(this.currentAreaObj.tabs)
       if (tabs.includes(tabname)) return
 
       // Adds new tabname
-      this.pageData[this.currentArea].original[tabname] = ""
+      this.pageData[this.currentArea].tabs[tabname] = ""
       
       // Refresh
       this.changeArea(this.currentArea)
@@ -891,14 +912,14 @@ const editor = {
       if (tabname === "") return
 
       // Checks if tabname exists already
-      const tabs = Object.keys(this.currentAreaObj.original)
+      const tabs = Object.keys(this.currentAreaObj.tabs)
       if (tabs.includes(tabname)) return
 
       // Save current tab
-      this.pageData[this.currentArea].original[tabname] = `${this.pageData[this.currentArea].original[this.currentTab]}`
+      this.pageData[this.currentArea].tabs[tabname] = `${this.pageData[this.currentArea].tabs[this.currentTab]}`
       
       // Delete tab
-      delete this.pageData[this.currentArea].original[this.currentTab]
+      delete this.pageData[this.currentArea].tabs[this.currentTab]
 
       // Refresh
       this.changeArea(this.currentArea)
@@ -907,6 +928,17 @@ const editor = {
       this.getNode('tab-rename').classList.toggle('hide')
 
       this.getNode(`tab-rename-btn`).classList.remove("btn-active")
+    },
+    tabDelete() {
+      // delete this.pageData
+
+      const keys = Object.keys(this.pageData[this.currentArea].tabs).length
+      if (keys == 1) return
+
+      delete this.pageData[this.currentArea].tabs[this.currentTab]
+
+      // Refresh
+      this.changeArea(this.currentArea)
     },
     openTabbtn(id) {
       this.getNode(`tab-${id}-btn`).classList.toggle("btn-active")
@@ -924,7 +956,7 @@ const editor = {
     }
   },
   template: `
-  <div id="editor-box" class="editor-container hide">
+  <div id="editor-box" class="editor-container">
     <div id="editor" class="flex">      
       <!-- Text Input Area -->
       <div class="textbox">
@@ -934,7 +966,7 @@ const editor = {
             <label>Path: </label>
             <div class="width-100">
               <input type="text" name="example" list="path-choices" 
-                     class="input width-100"
+                     class="input width-100" id="input-path"
                      placeholder="/">
               <datalist id="path-choices">
                 <option :value="value" v-for="(value, index) in pathChoices">
@@ -966,7 +998,7 @@ const editor = {
           <label>Tabs</label>
           <!-- Dropdown -->
           <select id="tab-select" @change="changeTab" v-if="currentAreaObj">
-              <option :value="name" v-for="(value, name) in currentAreaObj.original">
+              <option :value="name" v-for="(value, name) in currentAreaObj.tabs">
                 {{ name }}
               </option>
           </select>
@@ -976,7 +1008,7 @@ const editor = {
             <button class="btn" id="tab-new-btn" @click="openTabbtn('new')">New</button>
             <button class="btn" id="tab-rename-btn" @click="openTabbtn('rename')">Rename</button>
           </span>
-          <button class="btn">Delete</button>
+          <button class="btn" @click="tabDelete('delete')">Delete</button>
         </div>
 
         <!-- Tags -->
@@ -1138,7 +1170,7 @@ const searchbox = {
         searchbox.addEventListener("keydown", function(e) {
           const val = e.target.value
           const sugs = document.getElementById("suggestions")
-          
+          console.log("val: ", val)
 
           let suggestedList = []
 

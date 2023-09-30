@@ -454,7 +454,6 @@ summary {
 }
 
 .editbar {
-  display: none;
   position: fixed;
   top: 0px;
   right: 100px;
@@ -525,7 +524,6 @@ summary {
   width: 55vw;
   height: 750px;
   padding: 30px;
-  border-radius: 20px;
   gap: 10px;
   background-color: white;
   color: #191919;
@@ -621,12 +619,14 @@ summary {
   background-color: #252525 !important;
 }
 
-.btn-green {
-  background-color: #00df07 !important;
+.btn-blue {
+  background-color: #4584FF !important;
+  color: white;
 }
 
 .btn-red {
-  background-color: #ff0000 !important;
+  background-color: #191919 !important;
+  color: white;
 }
 
 @media screen and (max-width: 1200px) {
@@ -733,9 +733,6 @@ summary {
   font-size: 12px;
   font-family: Rubik;
 }
-.searchbox:focus {
-  outline: none;
-}
 
 .searchbox-area {
   margin-right: 5px;
@@ -743,7 +740,7 @@ summary {
 
 #suggestions {
   position: absolute;
-  background-color: #4584FF;
+  background-color: #252525;
   width: 62%;
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
@@ -751,14 +748,13 @@ summary {
 
 .suggestion-item {
   padding: 5px;
-  border-top: 2px solid #191919;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
   font-size: 13px;
   cursor: pointer;
   transition: 0.1s ease-in;
 }
 .suggestion-item:hover {
-  border-top: 2px solid #4584FF;
-  background-color: #252525;
+  background-color: #4584FF;
 }
 
 .sidebar {
@@ -766,6 +762,10 @@ summary {
   height: 100%;
   min-height: 400px;
   z-index: 1;
+}
+
+#sidebarobj {
+  left: 0px;
 }
 
 .user {
@@ -781,6 +781,7 @@ summary {
   background-color: #191919;
   color: white;
   transition: 0.3s ease-in-out;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 }
 
 .editor-bar {
