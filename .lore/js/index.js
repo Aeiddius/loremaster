@@ -1316,29 +1316,27 @@ const sidebarbtn = {
   name: "Sidebarbtn",
   data() {
     return {
-      pos: {},
-      card: {},
+      pos: "",
+      card: "",
       lastWidth: 0,
       checked: false,
     }
   },
   methods: {
     openSidebar() {
-      
-      if (this.pos.style.left == "0px") {
+
+      if (this.pos == "") this.getElements();
+
+      if (this.pos.style.left == "0px" || this.pos.style.left == '') {
         this.pos.style.left = "-500px" 
         this.card.style.marginLeft = "0px"
       } else {
         this.pos.style.left = "0px"
-
         if (window.innerWidth > 700) {
           this.card.style.marginLeft = "calc(300px - 70px)"
         }
         
       }
-
-      console.log(window.innerWidth)
-      // document.getElementById("sidebaropen").style.display = "none";
     },
     sideOpen() {
       this.pos.style.left = "0px"
@@ -1350,12 +1348,15 @@ const sidebarbtn = {
     },
     isOpen() {
       return this.pos.style.left == "0px"
+    },
+    getElements() {
+      this.pos = document.getElementById("sidebarobj")
+      this.card = document.getElementsByClassName("card")[0]
     }
   },
   mounted() {
+    this.getElements();
 
-    this.pos = document.getElementById("sidebarobj")
-    this.card = document.getElementsByClassName("card")[0]
 
     window.addEventListener('resize', ()=> {
       
