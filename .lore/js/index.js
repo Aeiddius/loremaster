@@ -547,7 +547,16 @@ const card = {
         const hres = line.match(/(#+)\s/);
         if (hres) {
           const h = hres[0].length
-          html += `<h${h}>${hres.input.replace(/\#/g,'').trim()}</h${h}>`
+          let btn = ``
+          if (h == 2) {
+            btn = `<a class="button button--toc" onclick="document.querySelector('#top').scrollIntoView();">↑</a>`
+          } else {
+            btn = ``
+          }
+          
+          html += `<span class="header1">
+                      <h${h} class="H${h}">${hres.input.replace(/\#/g,'').trim()}</h${h}>${btn}
+                  </span>`
           continue
         }
 
@@ -556,7 +565,6 @@ const card = {
         const bold = [...line.matchAll(/\*\*(.*?)\*\*/g)];
         if (bold.length != 0) {
           for (const b of bold) {
-            console.log(b[0])
             line = line.replace(b[0], `<b>${b[1]}</b>`)
           }
         }
@@ -565,7 +573,6 @@ const card = {
         const italic = [...line.matchAll(/\*(.*?)\*/g)];
         if (italic.length != 0) {
           for (const i of italic) {
-            console.log(i[0])
             line = line.replace(i[0], `<i>${i[1]}</i>`)
           }
         }
@@ -699,12 +706,16 @@ const card = {
           </div>
         </div>
 
-      </div>
 
-      
-      <div id="side-toc">
         
       </div>
+
+      <!-- <div>© 2021-2023 Aeiddius. All rights reserved.</div> -->
+
+<!--       
+      <div id="side-toc">
+        
+      </div> -->
 
     </div>
   ` 
@@ -1242,48 +1253,59 @@ const sidebar = {
     }
   },
   template: `
-  <div class="sidebar" id="sidebarobj">
-    <button class="close" @click="closeSidebar">✕</button>
+  
+  <div class="sidebar" >
 
-    <!-- Titles section -->
-    <div class="titles">
-      <h1 class="title">{{ projectTitle }}</h1>
-      <h2 class="subtitle">{{ projectSubtitle }}</h2>
-    </div>  
-
-    <!-- Search Box -->
-    <div class="inputs">
-    <Searchbox :directory="directory"/> <Toggle :projectTitle="projectTitle"/>
+    <div class="editor-bar">
+    <Sidebarbtn></Sidebarbtn>
     </div>
-    
-    <!-- Navigation Links -->
-    <div class="nav-links" v-if="rerender">
-      <template v-for="(value, name, index) in navs">
-          
-          <!-- Main Button -->
-          <span v-html="value.main"
-                :class="['button--mainnav', isCurrentNav== getNameClean(name) ? 'button--active' : '']"
-                ></span> 
-                <!-- @mouseover="expand(name + '-navid')" -->
-          <button v-if="Object.keys(value.subnav).length != 0"
-                  class="button button--showsub" 
-                  @click="toggleSubNav(name + '-navid')">
-                  ✢
-          </button><br> 
-          
-          <!-- Sub button -->
-          <div v-if="Object.keys(value.subnav).length != 0"
-               class="button--subnav hide-subnav"
-               :id="name + '-navid'">
-               <!-- @mouseleave="collapse(name + '-navid')" -->
-            <template v-for="(valuesub, namesub, indexsub) in value.subnav">
-              <span v-html="valuesub" class="button--mainnav"></span> 
-              <br>
-            </template>
-          </div>
 
-      </template>
+
+    <div class="user" id="sidebarobj">
+      <button class="close" @click="closeSidebar">✕</button>
+
+      <!-- Titles section -->
+      <div class="titles">
+        <h1 class="title">{{ projectTitle }}</h1>
+        <h2 class="subtitle">{{ projectSubtitle }}</h2>
+      </div>  
+
+      <!-- Search Box -->
+      <div class="inputs">
+      <Searchbox :directory="directory"/> <Toggle :projectTitle="projectTitle"/>
+      </div>
+      
+      <!-- Navigation Links -->
+      <div class="nav-links" v-if="rerender">
+        <template v-for="(value, name, index) in navs">
+            
+            <!-- Main Button -->
+            <span v-html="value.main"
+                  :class="['button--mainnav', isCurrentNav== getNameClean(name) ? 'button--active' : '']"
+                  ></span> 
+                  <!-- @mouseover="expand(name + '-navid')" -->
+            <button v-if="Object.keys(value.subnav).length != 0"
+                    class="button button--showsub" 
+                    @click="toggleSubNav(name + '-navid')">
+                    ✢
+            </button><br> 
+            
+            <!-- Sub button -->
+            <div v-if="Object.keys(value.subnav).length != 0"
+                 class="button--subnav hide-subnav"
+                 :id="name + '-navid'">
+                 <!-- @mouseleave="collapse(name + '-navid')" -->
+              <template v-for="(valuesub, namesub, indexsub) in value.subnav">
+                <span v-html="valuesub" class="button--mainnav"></span> 
+                <br>
+              </template>
+            </div>
+
+        </template>
+      </div>
     </div>
+
+
 
   </div>
 `
@@ -1291,20 +1313,78 @@ const sidebar = {
 
 const sidebarbtn = {
   name: "Sidebarbtn",
-  props: {
-
+  data() {
+    return {
+      pos: {},
+      card: {},
+      lastWidth: 0,
+      checked: false,
+    }
   },
   methods: {
     openSidebar() {
-      document.getElementById("sidebarobj").style.top = "0px";
-      document.getElementById("sidebaropen").style.display = "none";
+      
+      if (this.pos.style.left == "0px") {
+        this.pos.style.left = "-500px" 
+        this.card.style.marginLeft = "0px"
+      } else {
+        this.pos.style.left = "0px"
+
+        if (window.innerWidth > 700) {
+          this.card.style.marginLeft = "calc(300px - 70px)"
+        }
+        
+      }
+
+      console.log(window.innerWidth)
+      // document.getElementById("sidebaropen").style.display = "none";
+    },
+    sideOpen() {
+      this.pos.style.left = "0px"
+      this.card.style.marginLeft = "calc(300px - 70px)"
+    },
+    sideClose() {
+      this.pos.style.left = "-500px" 
+      this.card.style.marginLeft = "0px"
+    },
+    isOpen() {
+      return this.pos.style.left == "0px"
     }
+  },
+  mounted() {
+
+    this.pos = document.getElementById("sidebarobj")
+    this.card = document.getElementsByClassName("card")[0]
+
+    window.addEventListener('resize', ()=> {
+      
+      // Negative - Openig to the right
+      if (this.lastWidth - window.innerWidth < 0) {
+        
+        
+        // Positive - Closing to the left
+      } else if (this.lastWidth - window.innerWidth > 0) {
+        if (this.isOpen() == false) return
+      }
+
+      this.lastWidth = window.innerWidth
+
+      if (window.innerWidth > 700) {
+        // Open
+        this.sideOpen()
+      } else {
+        // Close
+        this.sideClose()
+      }
+    });
   },
   template: `
     <button class="button--sidebartoggle"
             id="sidebaropen"
             @click="openSidebar">
-            <slot/>
+            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 16 16">
+              <path d="M0 3C0 1.89543 0.895431 1 2 1H14C15.1046 1 16 1.89543 16 3V13C16 14.1046 15.1046 15 14 15H2C0.895431 15 0 14.1046 0 13V3ZM5 2V14H14C14.5523 14 15 13.5523 15 13V3C15 2.44772 14.5523 2 14 2H5ZM4 2H2C1.44772 2 1 2.44772 1 3V13C1 13.5523 1.44772 14 2 14H4V2Z"/>
+            </svg>
     </button>
   `
 }

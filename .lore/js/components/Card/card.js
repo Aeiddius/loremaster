@@ -92,7 +92,16 @@ const card = {
         const hres = line.match(/(#+)\s/);
         if (hres) {
           const h = hres[0].length
-          html += `<h${h}>${hres.input.replace(/\#/g,'').trim()}</h${h}>`
+          let btn = ``
+          if (h == 2) {
+            btn = `<a class="button button--toc" onclick="document.querySelector('#top').scrollIntoView();">↑</a>`
+          } else {
+            btn = ``
+          }
+          
+          html += `<span class="header1">
+                      <h${h} class="H${h}">${hres.input.replace(/\#/g,'').trim()}</h${h}>${btn}
+                  </span>`
           continue
         }
 
@@ -101,7 +110,6 @@ const card = {
         const bold = [...line.matchAll(/\*\*(.*?)\*\*/g)];
         if (bold.length != 0) {
           for (const b of bold) {
-            console.log(b[0])
             line = line.replace(b[0], `<b>${b[1]}</b>`)
           }
         }
@@ -110,7 +118,6 @@ const card = {
         const italic = [...line.matchAll(/\*(.*?)\*/g)];
         if (italic.length != 0) {
           for (const i of italic) {
-            console.log(i[0])
             line = line.replace(i[0], `<i>${i[1]}</i>`)
           }
         }
@@ -244,12 +251,16 @@ const card = {
           </div>
         </div>
 
-      </div>
 
-      
-      <div id="side-toc">
         
       </div>
+
+      <!-- <div>© 2021-2023 Aeiddius. All rights reserved.</div> -->
+
+<!--       
+      <div id="side-toc">
+        
+      </div> -->
 
     </div>
   ` 

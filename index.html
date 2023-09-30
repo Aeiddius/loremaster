@@ -17,8 +17,8 @@
 
   <div id="app">
     <!-- <Editor ref="editor" :directory="directory" @save-page="savePage"></Editor> -->
-    <Sidebarbtn>✢</Sidebarbtn>
-    <div class="container full">
+    
+    <div class="container full" id="top">
       
 
       <!-- Sidebar for navigation -->
@@ -30,7 +30,7 @@
 
       <!-- Editor bar -->
       <Editbar class=""></Editbar> 
-
+      
       <!-- Card component - All contents comes here -->
       <Card :title="pageName"
             :content="content"
@@ -41,6 +41,8 @@
             /> 
 
 
+      
+        
     </div>
 
     
