@@ -196,7 +196,7 @@ const editor = {
     }
   },
   template: `
-  <div id="editor-box" class="editor-container">
+  <div id="editor-box" class="editor-container hide">
     <div id="editor" class="flex">      
       <!-- Text Input Area -->
       <div class="textbox">

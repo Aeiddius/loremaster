@@ -10,19 +10,14 @@ const sidebarbtn = {
   },
   methods: {
     openSidebar() {
-
-      if (this.pos == "") this.getElements();
-
-      if (this.pos.style.left == "0px" || this.pos.style.left == '') {
-        this.pos.style.left = "-500px" 
-        this.card.style.marginLeft = "0px"
+       
+      if (this.pos.style.left == "0px") {
+        this.sideClose()
       } else {
         this.pos.style.left = "0px"
-        if (window.innerWidth > 700) {
-          this.card.style.marginLeft = "calc(300px - 70px)"
-        }
-        
+        if (window.innerWidth > 700) this.card.style.marginLeft = "calc(300px - 70px)"
       }
+
     },
     sideOpen() {
       this.pos.style.left = "0px"
@@ -42,8 +37,6 @@ const sidebarbtn = {
   },
   mounted() {
     this.getElements();
-
-
     window.addEventListener('resize', ()=> {
       
       // Negative - Openig to the right

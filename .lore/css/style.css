@@ -919,6 +919,38 @@ summary {
   fill: rgba(255, 255, 255, 0.3);
 }
 
+.button--sidebaredit {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  margin-right: -5px;
+  padding: 2px 5px;
+  border: none;
+  border-radius: 4px;
+  background-color: transparent;
+  color: white;
+  font-size: 1.3em;
+  cursor: pointer;
+  z-index: 999;
+  transition: 0.1s ease-in-out;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.button--sidebaredit:hover {
+  transform: scale(1.1);
+}
+.button--sidebaredit:hover svg {
+  fill: rgba(255, 255, 255, 0.7);
+}
+.button--sidebaredit:active, .button--sidebaredit :focus {
+  transform: scale(0.9);
+}
+.button--sidebaredit svg {
+  fill: rgba(255, 255, 255, 0.3);
+}
+
 .button {
   padding: 3px 5px 3px 5px;
   margin-right: 5px;
