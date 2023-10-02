@@ -13,21 +13,21 @@ const editor = {
       currentArea: "",
       currentTab: "",
       currentAreaObj: {}
-
-
     }
   },
   components: ['EditorTab'],
   emits: ['save-page'],
   props: {
-    directory: { type: Object, required: true }
+    directory: { type: Object, required: true },
+    pageId: { type: String, required: true, default: "not working fuck" },
   },
   methods: {
     start(value){
       this.pageData = copyobj(value["areas"])
-
-
       this.changeArea('full')
+
+      console.log(this.directory)
+      document.getElementById("input-path").value = this.directory[this.pageId].path.replace(`${this.pageId}.json`, "").replace(/\//g, "\\")
     },
     changeArea(area) {
 
@@ -55,7 +55,8 @@ const editor = {
       const paths = [];
       for (const entryId in this.directory) {
         const entry = splitStringAtLast(this.directory[entryId].path, '/')[0]
-        if (!paths.includes(entry)) paths.push(entry)
+        const rehashed_path = entry.replace(/\//g, "\\")
+        if (!paths.includes(rehashed_path)) paths.push(rehashed_path)
       }
       this.pathChoices = paths.sort()
 
@@ -115,16 +116,30 @@ const editor = {
       const parent = document.getElementById("parent-input").value
       const path = document.getElementById("input-path").value
 
+      if (this.pageData.hasOwnProperty("preview")) {
+        const tabs = this.pageData.preview.tabs
+        const tabsvalue = Object.keys(tabs)
+        if (tabsvalue.length == 0 || (tabsvalue.length == 1 && tabs[tabsvalue[0]].trim() == "")) {
+          delete this.pageData.preview
+        } 
+      }
+
+
       let newPage = {
         "areas": this.pageData,
         "tags": tags,
         "parent": parent,
-        "path": path
       }
+
 
 
       // emits saved page
       this.$emit('save-page', newPage)
+
+      if (isWebView) {
+        console.log("ID: ", this.pageId)
+        pywebview.api.savePage(path, this.pageId, newPage)
+      }
     },
     tabNew() {
       // Checks if new tab name is empty
@@ -197,17 +212,26 @@ const editor = {
   },
   template: `
   <div id="editor-box" class="editor-container hide">
-    <div id="editor" class="flex">      
+    <form onsubmit="return false" id="editor" class="flex">      
       <!-- Text Input Area -->
       <div class="textbox">
         <h1>Editor</h1>
         <!-- Path selector -->
+        <!-- <div class="path-select flex width-100 flex-align">
+            <label>Name: </label>
+            <div class="width-100">
+              <input type="text" name="example" 
+                     class="input" id="page-id"
+                     placeholder="New Page" required>
+            </div>
+        </div> -->
+
         <div class="path-select flex width-100 flex-align">
             <label>Path: </label>
             <div class="width-100">
               <input type="text" name="example" list="path-choices" 
                      class="input width-100" id="input-path"
-                     placeholder="/">
+                     placeholder="/" required>
               <datalist id="path-choices">
                 <option :value="value" v-for="(value, index) in pathChoices">
                 </option>
@@ -227,11 +251,11 @@ const editor = {
         <!-- Mode buttons -->
         <span class="flex">
           <!-- <label>Mode</label> -->
-          <button class="btn btn-active" id="btn-full" @click="changeArea('full')">Full</button>
-          <button class="btn" id="btn-preview" @click="changeArea('preview')">Preview</button>
+          <button class="btn btn-active" id="btn-full" @click="changeArea('full')" type="button" >Full</button>
+          <button class="btn" id="btn-preview" @click="changeArea('preview')" type="button" >Preview</button>
         </span>
 
-        <button class="btn" @click="editProfile" id="btn-profile">Edit Profile</button>
+        <button type="button" class="btn" @click="editProfile" id="btn-profile">Edit Profile</button>
 
         <!-- Select Tab -->
         <div class="tab-options flex flex-c mt-15">
@@ -245,10 +269,10 @@ const editor = {
 
           <!-- Edit -->
           <span class="flex">
-            <button class="btn" id="tab-new-btn" @click="openTabbtn('new')">New</button>
-            <button class="btn" id="tab-rename-btn" @click="openTabbtn('rename')">Rename</button>
+            <button type="button" class="btn" id="tab-new-btn" @click="openTabbtn('new')">New</button>
+            <button type="button" class="btn" id="tab-rename-btn" @click="openTabbtn('rename')">Rename</button>
           </span>
-          <button class="btn" @click="tabDelete('delete')">Delete</button>
+          <button type="button" class="btn" @click="tabDelete('delete')">Delete</button>
         </div>
 
         <!-- Tags -->
@@ -265,30 +289,30 @@ const editor = {
                  placeholder="home">
         </div>
 
-
+        <hr class="hr">
    
         <!-- Tab:New -->
-        <div class="flex flex-c mt-15 boxes hide" id="tab-new">
+        <div class="flex flex-c boxes hide" id="tab-new">
           <label>New Tab</label>
           <input type="text" id="tab-new-input" class="input width-100"
                  placeholder="home">
 
           <div class="flex">
-            <button class="btn" @click="tabNew">Ok</button>
-            <button class="btn" @click="closeTabbtn('new')">Cancel</button>
+            <button type="button" class="btn" @click="tabNew">Ok</button>
+            <button type="button" class="btn" @click="closeTabbtn('new')">Cancel</button>
           </div>
         </div>       
 
 
         <!-- Tab:Rename -->
-        <div class="flex flex-c mt-15 boxes hide" id="tab-rename">
+        <div class="flex flex-c boxes hide" id="tab-rename">
           <label>Rename Tab</label>
           <input type="text" id="tab-rename-input" class="input width-100"
                  placeholder="home">
 
           <div class="flex">
-            <button class="btn" @click="tabRename">Ok</button>
-            <button class="btn" @click="closeTabbtn('rename')">Cancel</button>
+            <button type="button" class="btn" @click="tabRename">Ok</button>
+            <button type="button" class="btn" @click="closeTabbtn('rename')">Cancel</button>
           </div>
         </div>       
 
@@ -301,7 +325,7 @@ const editor = {
       </div>
       <!-- Settings -->
     
-    </div> 
+    </form> 
 
   </div>
   `

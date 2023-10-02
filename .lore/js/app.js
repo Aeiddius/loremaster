@@ -3,7 +3,7 @@ var root; //
 
 var historyList = [];
 var globalPosition = null;
-
+var isWebView = false
 
 function start() { 
   const app = Vue.createApp({
@@ -26,8 +26,8 @@ function start() {
     },
     async mounted() {
       // Get Metadata
-      const metadata = await (await fetch(".lore/metadata.json")).json();
-      
+      const metadata = await this.fetchData(".lore/metadata.json")
+
       // Save key-info
       this.projectTitle = metadata.title;
       this.projectSubtitle = metadata.subtitle;
@@ -57,8 +57,24 @@ function start() {
 
       setup()
 
+
+      console.log("Is Web view: ", isWebView)
     },
     methods: {
+      async fetchData(url) {
+        try {
+          console.log("Working: ", NL_OS)
+        } catch (error) {
+          const resp = await fetch(url)
+          if (resp.status === 404) {
+            console.log("test")
+            return "Error"
+          }
+          return (await resp.json())
+
+        }
+
+      },
       async reload(pageId, isPopState = false, savePage="") {
 
        
@@ -87,15 +103,24 @@ function start() {
 
         // Update Card Content
         if (savePage == "") {
-          const resp = await fetch(pageMeta.path);
+          const resp = await this.fetchData(pageMeta.path);
           
-        
-          if (resp.status === 404) {
+          if (resp == "Error") {
             // this.content = createContentObj(`File <span class="error">${pageId}</span> is registered in metadata.json but does not exist`);
             this.content = createContentObj(`Page <span class="error">${pageId}</span> does not exist`);
           } else {
-            this.content = (await resp.json())|| createContentObj("The Page is empty");
-            // console.log(this.content)
+            this.content = resp
+            console.log(this.content)
+            if (this.content["areas"].hasOwnProperty("full")) {
+              const tabs = this.content["areas"]["full"].tabs
+              if (Object.keys(tabs).length === 1) {
+                const tabname = Object.keys(tabs)[0]
+                if (tabs[tabname].trim() == "") {
+                  this.content = createContentObj("The Page is empty");
+                }
+              }
+            }
+            
           }
 
           // if (isError) {
@@ -125,13 +150,36 @@ function start() {
     }
   })
 
+  // https://stackoverflow.com/questions/36170425/detect-click-outside-element
+  const clickOutside = {
+    beforeMount: (el, binding) => {
+      el.clickOutsideEvent = event => {
+        // here I check that click was outside the el and his children
+        if (!(el == event.target || el.contains(event.target))) {
+          // and if it did, call method provided in attribute value
+          binding.value();
+        }
+      };
+      document.addEventListener("click", el.clickOutsideEvent);
+    },
+    unmounted: el => {
+      document.removeEventListener("click", el.clickOutsideEvent);
+    },
+  };
+
+  app.directive("click-outside", clickOutside)
   root = mount(app) 
  
 
 }
 
 
+
 function setup() {
+  window.addEventListener('pywebviewready',()=>   {
+    isWebView = true
+  })
+
   // source: https://css-tricks.com/snippets/jquery/smooth-scrolling/
   window.scroll({
     top: 2500, 
@@ -145,4 +193,21 @@ function setup() {
     left: 0, 
     behavior: 'smooth' 
   });
+
+  const clickOutside = {
+  beforeMount: (el, binding) => {
+    el.clickOutsideEvent = event => {
+      // here I check that click was outside the el and his children
+      if (!(el == event.target || el.contains(event.target))) {
+        // and if it did, call method provided in attribute value
+        binding.value();
+      }
+    };
+    document.addEventListener("click", el.clickOutsideEvent);
+  },
+  unmounted: el => {
+    document.removeEventListener("click", el.clickOutsideEvent);
+  },
+};  
 }
+ 
