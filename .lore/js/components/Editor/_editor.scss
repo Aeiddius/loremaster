@@ -135,9 +135,16 @@
 
 
 
+.table {
+  .category {
+    width: fit-content;
+  }
+}
 
 
-
+.invalid {
+  outline: 2px solid $red;
+}
 
 
 

@@ -587,6 +587,15 @@ summary {
   font-size: 14px;
 }
 
+.table .category {
+  width: -moz-fit-content;
+  width: fit-content;
+}
+
+.invalid {
+  outline: 2px solid #F44336;
+}
+
 .btn {
   padding: 5px 10px 5px 10px;
   border: none;

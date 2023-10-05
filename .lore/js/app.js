@@ -57,7 +57,6 @@ function start() {
 
       setup()
 
-
       console.log("Is Web view: ", isWebView)
     },
     methods: {
@@ -129,7 +128,6 @@ function start() {
 
         } else {
           this.content = savePage
-          console.log("this is called")
         }
 
         this.pageId = pageId
@@ -143,7 +141,11 @@ function start() {
         if (!this.directory.hasOwnProperty(pageId)) pageId = "404"
         return pageId
       },
-      savePage(newPage) {
+      savePage(newPage, metaEntry) {
+        const key = Object.keys(metaEntry)[0]
+        this.directory[key] = metaEntry[key]
+
+        // this.directory = copyobj(this.directory)
 
         this.reload(this.getCurrentPageId(), false, newPage)
       }

@@ -58,7 +58,6 @@ function start() {
 
       setup()
 
-
       console.log("Is Web view: ", isWebView)
     },
     methods: {
@@ -130,7 +129,6 @@ function start() {
 
         } else {
           this.content = savePage
-          console.log("this is called")
         }
 
         this.pageId = pageId
@@ -144,7 +142,11 @@ function start() {
         if (!this.directory.hasOwnProperty(pageId)) pageId = "404"
         return pageId
       },
-      savePage(newPage) {
+      savePage(newPage, metaEntry) {
+        const key = Object.keys(metaEntry)[0]
+        this.directory[key] = metaEntry[key]
+
+        // this.directory = copyobj(this.directory)
 
         this.reload(this.getCurrentPageId(), false, newPage)
       }
@@ -836,6 +838,8 @@ const editor = {
       currentArea: "",
       currentTab: "",
       currentAreaObj: {}
+
+      // if new page
     }
   },
   components: ['EditorTab'],
@@ -849,8 +853,10 @@ const editor = {
       this.pageData = copyobj(value["areas"])
       this.changeArea('full')
 
-      console.log(this.directory)
-      document.getElementById("input-path").value = this.directory[this.pageId].path.replace(`${this.pageId}.json`, "").replace(/\//g, "\\")
+      // Set pagename:
+      document.getElementById("input-page-name").value = this.pageId == "add-page" ? "" : this.directory[this.pageId].title
+      document.getElementById("input-page-id").value = this.pageId == "add-page" ? "" : this.pageId
+      document.getElementById("input-path").value = this.pageId == "add-page" ? "" : this.directory[this.pageId].path.replace(`${this.pageId}.json`, "").replace(/\//g, "\\")
     },
     changeArea(area) {
 
@@ -932,13 +938,21 @@ const editor = {
         this.pageData[this.currentArea].profile = profile
         this.currentAreaObj.profile = profile
       }
-      console.log(this.pageData)
     },
     save() {
-      const tags = document.getElementById("tags-input").value  
-      const parent = document.getElementById("parent-input").value
-      const path = document.getElementById("input-path").value
+      const tags = document.getElementById("tags-input").value.trim()
+      const parent = document.getElementById("parent-input").value.trim()
+      const path = document.getElementById("input-path").value.trim()
+      const pageName = document.getElementById("input-page-name").value.trim()
+      const pageId = document.getElementById("input-page-id").value.trim()
 
+      // Validation
+      if (pageName === "" || pageId === "" || path === ""){
+        console.log("pageName|pageId|path are required")
+        return
+      }
+
+      // Remves empty preview
       if (this.pageData.hasOwnProperty("preview")) {
         const tabs = this.pageData.preview.tabs
         const tabsvalue = Object.keys(tabs)
@@ -947,6 +961,14 @@ const editor = {
         } 
       }
 
+      // Creates metadata.json entry
+      let metaEntry = {
+        [pageId]: {
+          "title": pageName,
+          "path": path.replace(/\\/g, "/") + pageId.replace(/\ /g, "-") + ".json",
+          "parent": parent,
+        }
+      }
 
       let newPage = {
         "areas": this.pageData,
@@ -954,15 +976,13 @@ const editor = {
         "parent": parent,
       }
 
-
-
       // emits saved page
-      this.$emit('save-page', newPage)
+      this.$emit('save-page', newPage, metaEntry)
 
       if (isWebView) {
-        console.log("ID: ", this.pageId)
-        pywebview.api.savePage(path, this.pageId, newPage)
+        pywebview.api.savePage(path, this.pageId, newPage, metaEntry)
       }
+      console.log("Saved Successfully")
     },
     tabNew() {
       // Checks if new tab name is empty
@@ -1031,35 +1051,53 @@ const editor = {
     },
     getNode(id) {
       return document.getElementById(id)
+    },
+    oninput(e) {
+      if (e.target.value.trim() == "") {
+        e.target.classList.add("invalid")
+        return
+      }
+      if (e.target.classList.contains("invalid")) {
+        e.target.classList.remove("invalid")
+      }
     }
   },
   template: `
-  <div id="editor-box" class="editor-container hide">
-    <form onsubmit="return false" id="editor" class="flex">      
+  <div id="editor-box" class="editor-container">
+    <div id="editor" class="flex">      
       <!-- Text Input Area -->
       <div class="textbox">
         <h1>Editor</h1>
-        <!-- Path selector -->
-        <!-- <div class="path-select flex width-100 flex-align">
-            <label>Name: </label>
-            <div class="width-100">
-              <input type="text" name="example" 
-                     class="input" id="page-id"
-                     placeholder="New Page" required>
-            </div>
-        </div> -->
+        
 
         <div class="path-select flex width-100 flex-align">
-            <label>Path: </label>
+
             <div class="width-100">
-              <input type="text" name="example" list="path-choices" 
-                     class="input width-100" id="input-path"
-                     placeholder="/" required>
-              <datalist id="path-choices">
-                <option :value="value" v-for="(value, index) in pathChoices">
-                </option>
-                
-              </datalist>
+              <table class="table width-100">
+                <tr>
+                  <td><label for="input-papge-name">Name:</label></td>
+                  <td><input class="input width-100" id="input-page-name" @input="(event) => oninput(event)" v-on:blur="oninput"></td>
+                  <td><label for="input-page-id">Id</label></td>
+                  <td><input class="input width-100" id="input-page-id" @input="(event) => oninput(event)" v-on:blur="oninput"></td>
+                </tr>
+
+                <!-- Path selector -->
+                <tr  >
+                  <td class="category"><label for="input-path">Path</label>:</td>
+                  <td colspan="100%">
+                    <input type="text" name="editor" list="path-choices" 
+                       class="input width-100" id="input-path"
+                       placeholder=""  @input="(event) => oninput(event)" v-on:blur="oninput">
+                    <datalist id="path-choices">
+                      <option :value="value" v-for="(value, index) in pathChoices">
+                      </option>
+                      
+                    </datalist>
+                  </td>
+                </tr>
+              </table>
+
+
             </div>
         </div>
         <!-- Textarea -->
@@ -1148,7 +1186,7 @@ const editor = {
       </div>
       <!-- Settings -->
     
-    </form> 
+    </div> 
 
   </div>
   `
@@ -1218,8 +1256,6 @@ const profilebox = {
   `
 }
 
-var pages = []
-
 const gotoPage = (pageId) => {
   document.getElementById("searchbox").value  = ''
 
@@ -1241,51 +1277,54 @@ const searchbox = {
     }
   },
   props: {
-    directory: { type: Object, required: true },
+    directory: { type: Object, required: true, default: {}},
   },
   watch: {
     directory: {
+      immediate: true,
+      deep: true,
       handler(value) {
+        if (isObjEmpty(value)) return
 
-
+        this.pages = []
+        console.log(this.directory)
         for (const entry in value) {
           const item = value[entry].title
-          pages.push({name: item, pageId: entry})
+          this.pages.push({name: item, pageId: entry})
         }
-
-        const searchbox = document.getElementById("searchbox")
-        searchbox.addEventListener("keydown", function(e) {
-          const val = e.target.value
-          const sugs = document.getElementById("suggestions")
-          console.log("val: ", val)
-
-          let suggestedList = []
-
-          for (const entry of pages) {
-            if (entry.name.toLowerCase().includes(val.toLowerCase().trim())) {
-              suggestedList.push(entry)
-            }
-          } 
-
-          sugs.innerHTML = ''
-
-          for (const item of suggestedList) {
-            sugs.insertAdjacentHTML('beforeend', `
-            <div class="suggestion-item" onclick="gotoPage('${item.pageId}')">
-              ${item.name}
-            </div>
-          `);
-          }
-          
-        })
       }
+    }
+  },
+  methods: {
+    suggest() {
+      const val = document.getElementById("searchbox").value.trim()
+      const sugs = document.getElementById("suggestions")
+
+      let suggestedList = []
+
+      for (const entry of this.pages) {
+        if (entry.name.toLowerCase().includes(val.toLowerCase().trim())) {
+          suggestedList.push(entry)
+        }
+      } 
+
+      sugs.innerHTML = ''
+
+      for (const item of suggestedList) {
+        sugs.insertAdjacentHTML('beforeend', `
+        <div class="suggestion-item" onclick="gotoPage('${item.pageId}')">
+          ${item.name}
+        </div>
+      `);
+      }
+      
     }
   },
   template: `
     <div class="searchbox-area">
       <input type="text" placeholder="Search.."
              class="searchbox"
-             id="searchbox" onfocusout="removeSuggestions()">
+             id="searchbox" onfocusout="removeSuggestions()" @keyup="suggest">
       <div id="suggestions"></div>
     </div>
 
@@ -1306,9 +1345,7 @@ const sidebar = {
     isCurrentNav() {
       let pageId = (new URLSearchParams(window.location.search)).get('p')
       if (pageId == null || pageId == "") pageId = "home"
-      // console.log(pageId)
       return pageId
-      // return 'home'
     }
   },
   props: {
@@ -1696,12 +1733,9 @@ const toggle = {
   },
   methods: {
     toggleArea() {
-      
       const toggleState = document.getElementById("switch").checked
       localStorage.setItem(this.uniqueId, toggleState);
       root.toggleState = toggleState
-      console.log(root.toggleState)
-
     }
   },
   template: `
