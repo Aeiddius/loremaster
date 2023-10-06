@@ -29,7 +29,7 @@ const searchbox = {
         if (isObjEmpty(value)) return
 
         this.pages = []
-        console.log(this.directory)
+
         for (const entry in value) {
           const item = value[entry].title
           this.pages.push({name: item, pageId: entry})

@@ -127,6 +127,10 @@ const editor = {
         return
       }
 
+      // if (pageId != this.pageId) {
+      //   console.log(pageId, this.pageId)
+      // }
+
       // Remves empty preview
       if (this.pageData.hasOwnProperty("preview")) {
         const tabs = this.pageData.preview.tabs
@@ -238,7 +242,7 @@ const editor = {
     }
   },
   template: `
-  <div id="editor-box" class="editor-container">
+  <div id="editor-box" class="editor-container hide">
     <div id="editor" class="flex">      
       <!-- Text Input Area -->
       <div class="textbox">
