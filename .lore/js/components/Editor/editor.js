@@ -10,6 +10,7 @@ const editor = {
       isCurrentProfile: false,
 
       // area obj
+      pageId: "",
       currentArea: "",
       currentTab: "",
       currentAreaObj: {}
@@ -21,12 +22,21 @@ const editor = {
   emits: ['save-page'],
   props: {
     directory: { type: Object, required: true },
-    pageId: { type: String, required: true, default: "not working fuck" },
+    curPageId: { type: String, required: true, default: "not working fuck" },
   },
   methods: {
     start(value){
+      this.pageId = this.curPageId
       this.pageData = copyobj(value["areas"])
       this.changeArea('full')
+
+      if (!this.directory.hasOwnProperty(this.pageId) || this.pageId === "404") {
+        console.log(this.pageId)
+        document.getElementById("input-page-name").value = this.pageId
+        document.getElementById("input-page-id").value = this.pageId
+        document.getElementById("input-path").value = ""
+        return
+      }
 
       // Set pagename:
       document.getElementById("input-page-name").value = this.pageId == "add-page" ? "" : this.directory[this.pageId].title
@@ -240,6 +250,16 @@ const editor = {
         e.target.classList.remove("invalid")
       }
     }
+  },
+  mounted() {
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        const editor = document.getElementById("editor-box").classList
+        if (!editor.contains("hide")) {
+          editor.add("hide")
+        }
+      }
+  });
   },
   template: `
   <div id="editor-box" class="editor-container hide">

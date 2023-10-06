@@ -67,13 +67,11 @@ function start() {
       window.addEventListener('forward', event => {
         if (globalPosition+1 < historyList.length) globalPosition++
         this.reload(historyList[globalPosition], true)
-        console.log(event)
       });
 
       window.addEventListener('back', event => {
         if (globalPosition !== 0) globalPosition--
         this.reload(historyList[globalPosition], true)
-        console.log(event)
       });
 
       setup()
@@ -106,10 +104,8 @@ function start() {
         this.history(pageId, isPopState)
 
         // Get metadata file
-        let isError = false;
         let pageMeta = this.directory[pageId] || this.directory["404"];
-        if (!this.directory.hasOwnProperty(pageId)) isError = true;
-        
+
         // Update Card Content        
         if (savePage != "") {
           // An editor reload
@@ -122,7 +118,10 @@ function start() {
             this.content = createContentObj("The page exist in <span class=\"error\">metadata.json</span> but does not exit")
           } else {
             // Check if page is real or Page does not exist
-            if (pageId == "404") resp.areas.full.tabs.default = resp.areas.full.tabs.default.replace("[[page-id]]", `<span class="error">${this.getCurrentPageId(true)}</span>`)
+            if (pageId == "404" || !this.directory.hasOwnProperty(pageId)) {
+              pageId = this.getCurrentPageId(true)
+              resp.areas.full.tabs.default = resp.areas.full.tabs.default.replace("[[page-id]]", `<span class="error">${pageId}</span>`)
+            }
             this.content = this.isContentEmpty(resp)
           }
         }
@@ -183,7 +182,6 @@ function start() {
         this.directory[key] = metaEntry[key]
         if (key !== this.pageId) {
           delete this.directory[this.pageId]
-          console.log(this.directory)
           this.pageId = key
           const url = new URL(window.location);  
           url.searchParams.set("p", this.pageId);
@@ -192,7 +190,6 @@ function start() {
         }
         
         this.reload(this.pageId, false, newPage)
-        console.log(this.pageId)
       }
     }
   })
