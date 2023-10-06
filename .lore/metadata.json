@@ -347,5 +347,9 @@
       "path": "content/story/tie/tie.json",
       "parent": "story"
     }
+  },
+  "templates": {
+    "n/a": "",
+    "character": "templates/character.json"
   }
 }

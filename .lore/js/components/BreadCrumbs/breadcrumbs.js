@@ -14,7 +14,7 @@ const breadcrumbs = {
       immediate: true,
       deep: true,
       handler(value) {
-        
+        if (value.trim() == "") return
         try {
           this.directory[this.pageId].parent 
         } catch (error) {

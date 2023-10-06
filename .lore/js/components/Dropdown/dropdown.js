@@ -4,15 +4,17 @@ const dropdown = {
     label: { type:String, required: true },
     sid: { type:String }, // Select id
     change: { type: Function },
-    optionList: { type: Object, required: true }       
+    optionList: { type: Object, required: true },
+    isTemplate: {type: Boolean, default: false}       
   },
   template: `
     <label>{{ label }}</label>
     <!-- Dropdown -->
     <select :id="sid" @change="change" class="dropdown">
-        <option :value="name" v-for="(value, name) in optionList">
+      <option :value="name" v-for="(value, name) in optionList">
           {{ name }}
-        </option>
+      </option>
+
     </select>
   `
 }

@@ -4,8 +4,8 @@ const editor = {
     return {
       pageData: {},
       pathChoices: [],
+      isSaveAsTemplate: false,
 
-      
       // Check to see if profile is currently edited
       isCurrentProfile: false,
 
@@ -20,8 +20,8 @@ const editor = {
   },
   components: ['EditorTab', 'EditorInputBox', 'EditorInput', 'Btn', 'Dropdown'],
   emits: ['save-page'],
-  props: {
-    directory: { type: Object, required: true },
+  props: { 
+    metadata: { type: Object, required: true, default: {}},
     curPageId: { type: String, required: true, default: "not working fuck" },
   },
   methods: {
@@ -34,8 +34,8 @@ const editor = {
 
       // Create path directory
       const paths = [];
-      for (const entryId in this.directory) {
-        const entry = splitStringAtLast(this.directory[entryId].path, '/')[0]
+      for (const entryId in this.metadata.directory) {
+        const entry = splitStringAtLast(this.metadata.directory[entryId].path, '/')[0]
         const rehashed_path = entry.replace(/\//g, "\\")
         if (!paths.includes(rehashed_path)) paths.push(rehashed_path)
       }
@@ -43,7 +43,7 @@ const editor = {
 
       // Create parent choices
 
-      if (!this.directory.hasOwnProperty(this.pageId) || this.pageId === "404") {
+      if (!this.metadata.directory.hasOwnProperty(this.pageId) || this.pageId === "404") {
         document.getElementById("input-page-name").value = this.pageId
         document.getElementById("input-page-id").value = this.pageId
         document.getElementById("input-path").value = ""
@@ -51,10 +51,10 @@ const editor = {
       }
 
       // Set pagename
-      document.getElementById("input-page-name").value = this.pageId == "add-page" ? "" : this.directory[this.pageId].title
+      document.getElementById("input-page-name").value = this.pageId == "add-page" ? "" : this.metadata.directory[this.pageId].title
       document.getElementById("input-page-id").value = this.pageId == "add-page" ? "" : this.pageId
-      document.getElementById("input-path").value = this.pageId == "add-page" ? "" : this.directory[this.pageId].path.replace(`${this.pageId}.json`, "").replace(/\//g, "\\")
-      document.getElementById("input-parent").value = this.pageId == "add-page" ? "" : this.directory[this.pageId].parent
+      document.getElementById("input-path").value = this.pageId == "add-page" ? "" : this.metadata.directory[this.pageId].path.replace(`${this.pageId}.json`, "").replace(/\//g, "\\")
+      document.getElementById("input-parent").value = this.pageId == "add-page" ? "" : this.metadata.directory[this.pageId].parent
     },
     changeArea(area) {
       // Area validation CCheck
@@ -88,6 +88,17 @@ const editor = {
       this.currentTab = event instanceof Event ? event.currentTarget.value : event
       this.getNode("tab-rename-input").value = this.currentTab
       this.refreshTextArea()
+    },
+
+    async changeTemplate() {
+      const select = document.getElementById("template-select")
+      if (select.value === "n/a") return
+
+      const url = this.metadata.templates[select.value]
+
+      const data = await fetchData(url)
+      this.start(data)
+      console.log(data)
     },
 
     refreshTextArea(){
@@ -218,6 +229,20 @@ const editor = {
       this.getNode(`tab-${id}-btn`).classList.remove("btn-active")
       this.getNode(`tab-${id}`).classList.add('hide')
     },
+
+    saveTemplate() {
+      console.log("esss")
+
+      const checked = document.getElementById("saveAsTemplate").checked
+      const name = document.getElementById("input-page-name")
+      const path = document.getElementById("input-path")
+      name.disabled = checked;
+      path.disabled = checked
+
+      this.isSaveAsTemplate = checked
+      console.log(checked)
+    },
+
     exit() {
       this.getNode("editor-box").classList.add("hide")
     },
@@ -233,6 +258,7 @@ const editor = {
         e.target.classList.remove("invalid")
       }
     },
+
     isLastCharSlash(inputString) {
       // Get the last character of the string
       var lastChar = inputString.slice(-1);
@@ -252,7 +278,7 @@ const editor = {
   });
   },
   template: `
-  <div id="editor-box" class="editor-container ">
+  <div id="editor-box" class="editor-container hide">
 
     <div id="editor" class="flex">      
 
@@ -343,10 +369,23 @@ const editor = {
                      iid="input-parent"
                      did="parent-choices"
                      placeholder="home"
-                     :datalist="Object.keys(this.directory).sort()"/>
+                     :datalist="Object.keys(this.metadata.directory).sort()"/>
 
         <hr class="hr">
    
+          <!-- Template -->
+          <Dropdown label="Templates"
+                    sid="template-select"
+                    :option-list="this.metadata.templates"
+                    :change="changeTemplate"
+                    v-if="Object.keys(currentAreaObj).length != 0"/>
+
+          <div class="checkbox">
+            <input type="checkbox" name="saveAsTemplate" id="saveAsTemplate" @change="saveTemplate">
+            <span for="saveAsTemplate">Save as Template</span>
+          </div>
+
+ 
         <!-- Tab:New -->
         <EditorInputBox ref="tabnew" 
                         label="New Tab"

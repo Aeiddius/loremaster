@@ -568,6 +568,29 @@ summary {
   background-color: rgba(244, 67, 54, 0.7) !important;
 }
 
+.template-list {
+  width: 100%;
+}
+.template-list h2 {
+  font-size: 20px;
+}
+.template-list select {
+  padding: 10px;
+  width: 100%;
+  border: none;
+  color: white;
+  background-color: #252525;
+}
+.template-list select::-webkit-scrollbar {
+  width: 0.5em;
+}
+.template-list select::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+}
+.template-list select::-webkit-scrollbar-thumb {
+  background-color: #4584FF;
+}
+
 .editor-container {
   position: fixed;
   height: 100%;
@@ -642,6 +665,24 @@ summary {
 
 .invalid {
   outline: 2px solid #F44336;
+}
+
+.checkbox {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 5px;
+}
+.checkbox input {
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+  accent-color: #4584FF;
+}
+.checkbox span {
+  vertical-align: middle;
+  color: #727272;
+  font-size: 12px;
 }
 
 @media screen and (max-width: 1000px) {

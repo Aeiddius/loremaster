@@ -48,3 +48,19 @@ $editbar--bg: transparent;
     background-color: rgba($red, 70%) !important;
   }
 }
+
+
+.template-list {
+  width: 100%;
+  h2 {
+    font-size: 20px;
+  }
+  select {
+    padding: 10px;
+    width: 100%;
+    border: none;
+    color: white;
+    background-color: $dark;
+    @include scrollbar;
+  }
+}

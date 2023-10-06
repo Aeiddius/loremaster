@@ -95,7 +95,7 @@ const sidebar = {
 
     <div class="user" id="sidebarobj" style="left: 0px;">
 
-      <EditMenu/>
+      <EditMenu :templates="metadata.templates"/>
 
       <div id="navigation">
         <button class="close" @click="closeSidebar">✕</button>

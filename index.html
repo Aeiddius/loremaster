@@ -16,15 +16,18 @@
 <body onload="start()">
 
   <div id="app">
-    <Editor ref="editor" :directory="metadata.directory" @save-page="savePage" :cur-page-id="pageId"></Editor>
-    <Confirmbox message="Delete this page?" id="delete-confirm" :handler="deletePage"/></Confirmbox>    
-    <div class="container full" id="top">
+    <Editor ref="editor"
+            :metadata="metadata"
+            @save-page="savePage"
+            :cur-page-id="pageId"></Editor>
 
+    <Confirmbox message="Delete this page?"
+                id="delete-confirm"
+                :handler="deletePage"></Confirmbox>
+
+    <div class="container full" id="top">
       <!-- Sidebar for navigation -->
-      <Sidebar 
-               :rerender="rerender"
-               :metadata="metadata">
-      </Sidebar>
+      <Sidebar :rerender="rerender" :metadata="metadata"></Sidebar>
       
       <!-- Card component - All contents comes here -->
       <Card :title="pageName"
@@ -37,6 +40,7 @@
     </div>
   </div>
 
+  <!-- Script imports -->
   <script src=".lore/js/import/yaml.min.js"></script>
   <script src=".lore/js/import/vue.global.js"></script>
   

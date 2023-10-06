@@ -103,6 +103,25 @@
   outline: 2px solid $red;
 }
 
+.checkbox {
+  display: flex; 
+  justify-content: center;
+  align-items: center;
+  margin-top: 5px;
+  // text-align: cente;
+  input {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+    accent-color: $blue;
+
+  }
+  span  {
+    vertical-align:middle;
+    color: lighten($dark, 30%);
+    font-size: 12px;
+  }
+}
 
 // Media Query
 @media screen and (max-width: 1000px) {

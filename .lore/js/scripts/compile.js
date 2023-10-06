@@ -7,7 +7,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import {minify} from 'minify';
+
 
 function findFilesInDirectory(directoryPath, extension) {
   const scssFiles = [];

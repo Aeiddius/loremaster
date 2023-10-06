@@ -10,6 +10,7 @@ class Metadata {
     this.metadata = metadata
 
     this.directory = this.metadata.directory
+    this.templates = this.metadata.templates
     this.projectTitle = this.metadata.title;
     this.projectSubtitle = this.metadata.subtitle;
 
@@ -55,7 +56,7 @@ function start() {
     },
     async mounted() {
       // Get Metadata
-      const metadata = await this.fetchData(".lore/metadata.json")
+      const metadata = await fetchData(".lore/metadata.json")
       this.metadata = new Metadata(metadata)
 
       // Get Directory
@@ -81,14 +82,7 @@ function start() {
       setup()
     },
     methods: {
-      async fetchData(url) {
 
-        const resp = await fetch(url, {cache: "no-store"}) // cache no store added because backend pywebview is caching fetch and not updating when newly saved
-        if (resp.status === 404) {
-          return "Error"
-        }
-        return await resp.json()
-      },
       /**
        * Reloads the page card component
        * @param  {string} pageId id of the page to reload from directory
@@ -114,7 +108,7 @@ function start() {
           this.content = savePage
         } else {
           // A new page get
-          const resp = await this.fetchData(pageMeta.path);
+          const resp = await fetchData(pageMeta.path);
           if (resp == "Error") {
             // Page is in Metadata.json but doesn't exist
             this.content = createContentObj("The page exist in <span class=\"error\">metadata.json</span> but does not exit")
