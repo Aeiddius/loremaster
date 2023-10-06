@@ -11,6 +11,8 @@ const breadcrumbs = {
   },
   watch: {
     pageId: {
+      immediate: true,
+      deep: true,
       handler(value) {
         
         try {

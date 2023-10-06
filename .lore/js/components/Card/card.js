@@ -105,9 +105,7 @@ const card = {
           let btn = ``
           if (h == 2) {
             btn = `<a class="button button--toc" onclick="document.querySelector('#top').scrollIntoView();">↑</a>`
-          } else {
-            btn = ``
-          }
+          } 
           
           html += `<span class="header1">
                       <h${h} class="H${h}">${hres.input.replace(/\#/g,'').trim()}</h${h}>${btn}
@@ -182,8 +180,8 @@ const card = {
         let toc = ""
 
         for (const head of headers) {
-          head.id = head.innerText.replace(" ", "-").toLowerCase()
-          toc += `<a class="button button--toc ${head.tagName}" onclick="document.querySelector('#${head.id}').scrollIntoView();">${head.innerText}</a>\n`
+          head.id = head.innerText.replace(/\s/g, "-").replace(/\'/g, "-").toLowerCase().replace(/\:/g, "").trim()
+          toc += `<a class="button button--toc ${head.tagName}" onclick="document.querySelector('#${head.id}').scrollIntoView();">${head.innerText.replace(/\:/g, "")}</a>\n`
         } 
         
 
@@ -248,7 +246,7 @@ const card = {
           {{ title }} 
         </h1>
 
-        <BreadCrumbs :directory="directory" :page-id="pageId"/>
+        <BreadCrumbs :directory="directory" :page-id="pageId" v-if="rerender"/>
 
         <div v-for="(area, name, index) in areas"
              v-if="rerender"

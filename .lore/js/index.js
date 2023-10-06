@@ -13,13 +13,28 @@ class Metadata {
     this.directory = this.metadata.directory
     this.projectTitle = this.metadata.title;
     this.projectSubtitle = this.metadata.subtitle;
+
+    // Set Metadata
+    document.getElementsByTagName("title")[0].innerText = this.projectTitle;
   }
   
-  updateDirKey(oldKey, newKey, value) {
+  updateDirKey(oldKey, newKey, metaEntry) {
     if (oldKey !== newKey) {
       delete this.metadata.directory[oldKey]
     }
-    this.metadata.directory[newKey] = value[newKey]
+    this.metadata.directory[newKey] = metaEntry[newKey]
+    this.updateLink(newKey)
+  }
+
+  deleteDirkey(key){
+    delete this.metadata.directory[key]
+  }
+
+  updateLink(newKey) {
+    const url = new URL(window.location);  
+    url.searchParams.set("p", newKey);
+    history.replaceState(null, null, ' ');
+    history.pushState({}, "", url);
   }
 }
 
@@ -27,14 +42,10 @@ function start() {
   const app = Vue.createApp({
     data() {
       return {
-        metadata: {},
+        metadata: {directory: {}},
         directory: {},
         rerender: true,
         toggleState: false,
-
-        // Sidebar
-        projectTitle: "",
-        projectSubtitle: "",
         
         // Card
         content: {},
@@ -45,15 +56,8 @@ function start() {
     },
     async mounted() {
       // Get Metadata
-      
       const metadata = await this.fetchData(".lore/metadata.json")
       this.metadata = new Metadata(metadata)
-      // console.log(this.metadata)  
-
-      // Save key-info
-      this.projectTitle = metadata.title;
-      this.projectSubtitle = metadata.subtitle;
-      document.getElementsByTagName("title")[0].innerText = this.projectTitle;
 
       // Get Directory
       this.directory = metadata.directory
@@ -76,13 +80,11 @@ function start() {
       });
 
       setup()
-
-      console.log("Is Web view: ", isWebView)
     },
     methods: {
       async fetchData(url) {
 
-        const resp = await fetch(url)
+        const resp = await fetch(url, {cache: "no-store"}) // cache no store added because backend pywebview is caching fetch and not updating when newly saved
         if (resp.status === 404) {
           return "Error"
         }
@@ -177,23 +179,28 @@ function start() {
         if (!this.directory.hasOwnProperty(pageId)) pageId = "404"
         return pageId
       },
-      savePage(newPage, metaEntry) {
-        const key = Object.keys(metaEntry)[0]
-
-        this.directory[key] = metaEntry[key]
-        if (key !== this.pageId) {
-          delete this.directory[this.pageId]
-          this.pageId = key
-          const url = new URL(window.location);  
-          url.searchParams.set("p", this.pageId);
-          history.replaceState(null, null, ' ');
-          history.pushState({}, "", url);
-        }
+      savePage(path, newPage, metaEntry) {
+        const key = getKey(metaEntry)[0]
+        this.metadata.updateDirKey(this.pageId, key, metaEntry)
         
+        
+        
+        if (isWebView) {
+          pywebview.api.savePage(this.pageId, newPage, metaEntry)
+        }
+        this.pageId = key
         this.reload(this.pageId, false, newPage)
+      },
+      deletePage() {
+        this.metadata.deleteDirkey(this.pageId)
+        changePage("home")
+
+        if (isWebView) {
+          pywebview.api.deletePage(this.pageId)
+        }
       }
     }
-  })
+  }) 
 
   // https://stackoverflow.com/questions/36170425/detect-click-outside-element
   const clickOutside = {
@@ -224,7 +231,8 @@ function setup() {
   window.addEventListener('pywebviewready',()=>   {
     isWebView = true
   })
-
+  
+  console.log("Is Web view: ", isWebView)
   // source: https://css-tricks.com/snippets/jquery/smooth-scrolling/
   window.scroll({
     top: 2500, 
@@ -237,32 +245,21 @@ function setup() {
     top: 100, // could be negative value
     left: 0, 
     behavior: 'smooth' 
-  });
-
-  const clickOutside = {
-  beforeMount: (el, binding) => {
-    el.clickOutsideEvent = event => {
-      // here I check that click was outside the el and his children
-      if (!(el == event.target || el.contains(event.target))) {
-        // and if it did, call method provided in attribute value
-        binding.value();
-      }
-    };
-    document.addEventListener("click", el.clickOutsideEvent);
-  },
-  unmounted: el => {
-    document.removeEventListener("click", el.clickOutsideEvent);
-  },
-};  
+  });  
 }
 
 function mount(app) {
   // Mount Components
   const components = [
     breadcrumbs,
+    btn,
     card,
+    confirmbox,
+    dropdown,
     editmenu,
     editor,
+    editorinput,
+    editorinputbox,
     modal,
     profilebox,
     searchbox,
@@ -391,6 +388,7 @@ function changePage(pageId) {
   
   // Reload vue page
   root.reload(pageId)
+  document.querySelector('#app').scrollIntoView();
 }
 
 function copyobj(obj) {
@@ -407,6 +405,10 @@ function createContentObj(content) {
       }
     }
   }
+}
+
+const getKey = (obj) => {
+  return Object.keys(obj)
 }
 
 function isObjEmpty(obj) {
@@ -522,6 +524,8 @@ const breadcrumbs = {
   },
   watch: {
     pageId: {
+      immediate: true,
+      deep: true,
       handler(value) {
         
         try {
@@ -563,6 +567,22 @@ const breadcrumbs = {
        <template v-if="index + 1 != crumbs.length"> » </template>
     </template>
   </div>
+  `
+}
+
+const btn = {
+  name: "Btn",
+  props: {
+    name: { type:String, required: true },
+    bid: { type:String, required: false }, 
+    click: { type: Function, required: false },
+    isActive: { type: Boolean, required: false  }
+  },
+  template: `
+    <button type="button"
+            :class="['btn', isActive == true ? 'btn-active' : '']"
+            :id="bid"
+            @click="click">{{name}}</button>
   `
 }
 
@@ -672,9 +692,7 @@ const card = {
           let btn = ``
           if (h == 2) {
             btn = `<a class="button button--toc" onclick="document.querySelector('#top').scrollIntoView();">↑</a>`
-          } else {
-            btn = ``
-          }
+          } 
           
           html += `<span class="header1">
                       <h${h} class="H${h}">${hres.input.replace(/\#/g,'').trim()}</h${h}>${btn}
@@ -749,8 +767,8 @@ const card = {
         let toc = ""
 
         for (const head of headers) {
-          head.id = head.innerText.replace(" ", "-").toLowerCase()
-          toc += `<a class="button button--toc ${head.tagName}" onclick="document.querySelector('#${head.id}').scrollIntoView();">${head.innerText}</a>\n`
+          head.id = head.innerText.replace(/\s/g, "-").replace(/\'/g, "-").toLowerCase().replace(/\:/g, "").trim()
+          toc += `<a class="button button--toc ${head.tagName}" onclick="document.querySelector('#${head.id}').scrollIntoView();">${head.innerText.replace(/\:/g, "")}</a>\n`
         } 
         
 
@@ -815,7 +833,7 @@ const card = {
           {{ title }} 
         </h1>
 
-        <BreadCrumbs :directory="directory" :page-id="pageId"/>
+        <BreadCrumbs :directory="directory" :page-id="pageId" v-if="rerender"/>
 
         <div v-for="(area, name, index) in areas"
              v-if="rerender"
@@ -843,6 +861,55 @@ const card = {
   ` 
 }
 
+const confirmbox = {
+  name: "Confirmbox",
+  props: {
+    id: {type: String, required: true },
+    message: { type: String, required: true, default: "Default Message" },
+    handler: { type: Function}
+  },
+  methods: {
+    close() {
+      document.getElementById(this.id).classList.add("hide")
+    },
+    run() {
+      this.handler()
+      this.close()
+    }
+  },
+  template: `
+    <div class="confirmbox hide" :id="id">
+      <div class="box">
+        <p>{{ message }}</p>
+        <div class="buttons">
+          <button class="btn" @click="run">Confirm</button>
+          <button class="btn btn-red" @click="close">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+  `
+}
+
+const dropdown = {
+  name: "Dropdown",
+  props: {
+    label: { type:String, required: true },
+    sid: { type:String }, // Select id
+    change: { type: Function },
+    optionList: { type: Object, required: true }       
+  },
+  template: `
+    <label>{{ label }}</label>
+    <!-- Dropdown -->
+    <select :id="sid" @change="change" class="dropdown">
+        <option :value="name" v-for="(value, name) in optionList">
+          {{ name }}
+        </option>
+    </select>
+  `
+}
+
 const editmenu = {
   name: "EditMenu",
   props: {},
@@ -853,6 +920,10 @@ const editmenu = {
     add() {
       changePage('add-page')
       this.open()
+    },
+    openDelete() {
+      document.getElementById("delete-confirm").classList.remove("hide")
+      console.log(document.getElementById("delete-confirm"))
     }
   },
   template: `
@@ -860,7 +931,7 @@ const editmenu = {
       <h1 class="titles">Edit Mode</h1>
       <button class="button--edit" @click="open">Edit Page</button>
       <button class="button--edit" @click="add">Add Page</button>
-      <button class="button--edit button--edit-red">Delete Page</button>
+      <button class="button--edit button--edit-red" @click="openDelete">Delete Page</button>
     </div>
   `
 }
@@ -882,10 +953,10 @@ const editor = {
       currentTab: "",
       currentAreaObj: {}
 
-      // if new page
+      // if new page 
     }
   },
-  components: ['EditorTab'],
+  components: ['EditorTab', 'EditorInputBox', 'EditorInput', 'Btn', 'Dropdown'],
   emits: ['save-page'],
   props: {
     directory: { type: Object, required: true },
@@ -893,31 +964,40 @@ const editor = {
   },
   methods: {
     start(value){
+      // Set Variables
       this.pageId = this.curPageId
       this.pageData = copyobj(value["areas"])
       this.changeArea('full')
 
+
+      // Create path directory
+      const paths = [];
+      for (const entryId in this.directory) {
+        const entry = splitStringAtLast(this.directory[entryId].path, '/')[0]
+        const rehashed_path = entry.replace(/\//g, "\\")
+        if (!paths.includes(rehashed_path)) paths.push(rehashed_path)
+      }
+      this.pathChoices = paths.sort()
+
+      // Create parent choices
+
       if (!this.directory.hasOwnProperty(this.pageId) || this.pageId === "404") {
-        console.log(this.pageId)
         document.getElementById("input-page-name").value = this.pageId
         document.getElementById("input-page-id").value = this.pageId
         document.getElementById("input-path").value = ""
         return
       }
 
-      // Set pagename:
+      // Set pagename
       document.getElementById("input-page-name").value = this.pageId == "add-page" ? "" : this.directory[this.pageId].title
       document.getElementById("input-page-id").value = this.pageId == "add-page" ? "" : this.pageId
       document.getElementById("input-path").value = this.pageId == "add-page" ? "" : this.directory[this.pageId].path.replace(`${this.pageId}.json`, "").replace(/\//g, "\\")
+      document.getElementById("input-parent").value = this.pageId == "add-page" ? "" : this.directory[this.pageId].parent
     },
     changeArea(area) {
-
+      // Area validation CCheck
       if (area == "preview" && !this.pageData.hasOwnProperty("preview")) {
-        this.pageData["preview"] = {
-          tabs: {
-            "default": ""
-          }
-        }
+        this.pageData["preview"] = { tabs: { "default": "" } }
       }
 
       // Set initial variables
@@ -932,15 +1012,6 @@ const editor = {
         else this.getNode(`btn-${ar}`).classList.remove("btn-active")
       }
 
-      // Create path directory
-      const paths = [];
-      for (const entryId in this.directory) {
-        const entry = splitStringAtLast(this.directory[entryId].path, '/')[0]
-        const rehashed_path = entry.replace(/\//g, "\\")
-        if (!paths.includes(rehashed_path)) paths.push(rehashed_path)
-      }
-      this.pathChoices = paths.sort()
-
       // Remove active status of btn-profile
       this.getNode("btn-profile").classList.remove("btn-active")
 
@@ -949,27 +1020,18 @@ const editor = {
       // Set <textarea>
       this.refreshTextArea()
     },
+
     changeTab(event) {
-      // Save the last area
       this.isCurrentProfile = false
-
-      let newTab = ""
-      if (event instanceof Event) {
-        newTab = event.currentTarget.value
-      } else {
-        newTab = event
-      }
-
-      this.currentTab = newTab
-      
-      document.getElementById("tab-rename-input").value = newTab
+      this.currentTab = event instanceof Event ? event.currentTarget.value : event
+      this.getNode("tab-rename-input").value = this.currentTab
       this.refreshTextArea()
-
-      
     },
+
     refreshTextArea(){
       this.getNode("textarea").value = `${this.currentAreaObj.tabs[this.currentTab]}`
     },
+
     editProfile() {
       if (this.isCurrentProfile == false) {
         this.isCurrentProfile = true
@@ -981,6 +1043,7 @@ const editor = {
         this.getNode("btn-profile").classList.remove("btn-active")
       }
     },
+
     saveTextArea(event) {
       if (this.isCurrentProfile == false) {
         this.pageData[this.currentArea].tabs[this.currentTab] = event.currentTarget.value
@@ -991,9 +1054,10 @@ const editor = {
         this.currentAreaObj.profile = profile
       }
     },
+
     save() {
-      const tags = document.getElementById("tags-input").value.trim()
-      const parent = document.getElementById("parent-input").value.trim()
+      const tags = document.getElementById("input-tags").value.trim()
+      const parent = document.getElementById("input-parent").value.trim()
       const path = document.getElementById("input-path").value.trim()
       const pageName = document.getElementById("input-page-name").value.trim()
       const pageId = document.getElementById("input-page-id").value.trim()
@@ -1004,10 +1068,6 @@ const editor = {
         return
       }
 
-      // if (pageId != this.pageId) {
-      //   console.log(pageId, this.pageId)
-      // }
-
       // Remves empty preview
       if (this.pageData.hasOwnProperty("preview")) {
         const tabs = this.pageData.preview.tabs
@@ -1017,27 +1077,28 @@ const editor = {
         } 
       }
 
+      // Validates path ending in "/"
+      let newPath = path.replace(/\\/g, "/")
+      if (!this.isLastCharSlash(newPath)) newPath = newPath + "/"
+
       // Creates metadata.json entry
-      let metaEntry = {
+      const metaEntry = {
         [pageId]: {
           "title": pageName,
-          "path": path.replace(/\\/g, "/") + pageId.replace(/\ /g, "-") + ".json",
+          "path": newPath + pageId.replace(/\ /g, "-") + ".json",
           "parent": parent,
         }
       }
 
-      let newPage = {
+      const newPage = {
         "areas": this.pageData,
         "tags": tags,
         "parent": parent,
       }
-
+      console.log("NEW PATH: ", newPath + pageId.replace(/\ /g, "-") + ".json",)
       // emits saved page
-      this.$emit('save-page', newPage, metaEntry)
+      this.$emit('save-page', path, newPage, metaEntry)
 
-      if (isWebView) {
-        pywebview.api.savePage(path, this.pageId, newPage, metaEntry)
-      }
       console.log("Saved Successfully")
     },
     tabNew() {
@@ -1054,11 +1115,6 @@ const editor = {
       
       // Refresh
       this.changeArea(this.currentArea)
-
-      // hide new tab
-      this.getNode('tab-new').classList.toggle('hide')
-      
-      this.getNode(`tab-new-btn`).classList.remove("btn-active")
     },
     tabRename() {
       // Checks if renamed tab is empty
@@ -1077,11 +1133,6 @@ const editor = {
 
       // Refresh
       this.changeArea(this.currentArea)
-
-      // Hide rename tab
-      this.getNode('tab-rename').classList.toggle('hide')
-
-      this.getNode(`tab-rename-btn`).classList.remove("btn-active")
     },
     tabDelete() {
       // delete this.pageData
@@ -1095,8 +1146,11 @@ const editor = {
       this.changeArea(this.currentArea)
     },
     openTabbtn(id) {
-      this.getNode(`tab-${id}-btn`).classList.toggle("btn-active")
-      this.getNode(`tab-${id}`).classList.toggle('hide')
+      if (id==='new') {
+        this.$refs.tabnew.toggle()
+      } else if (id === 'rename') {
+        this.$refs.tabrename.toggle()
+      }
     },
     closeTabbtn(id) {
       this.getNode(`tab-${id}-btn`).classList.remove("btn-active")
@@ -1116,6 +1170,13 @@ const editor = {
       if (e.target.classList.contains("invalid")) {
         e.target.classList.remove("invalid")
       }
+    },
+    isLastCharSlash(inputString) {
+      // Get the last character of the string
+      var lastChar = inputString.slice(-1);
+    
+      // Check if the last character is "/"
+      return lastChar === "/";
     }
   },
   mounted() {
@@ -1129,17 +1190,18 @@ const editor = {
   });
   },
   template: `
-  <div id="editor-box" class="editor-container hide">
+  <div id="editor-box" class="editor-container ">
+
     <div id="editor" class="flex">      
-      <!-- Text Input Area -->
+
       <div class="textbox">
         <h1>Editor</h1>
         
-
+        <!-- Header input -->
         <div class="path-select flex width-100 flex-align">
-
             <div class="width-100">
               <table class="table width-100">
+                <!-- Data Input -->
                 <tr>
                   <td><label for="input-papge-name">Name:</label></td>
                   <td><input class="input width-100" id="input-page-name" @input="(event) => oninput(event)" v-on:blur="oninput"></td>
@@ -1148,7 +1210,7 @@ const editor = {
                 </tr>
 
                 <!-- Path selector -->
-                <tr  >
+                <tr>
                   <td class="category"><label for="input-path">Path</label>:</td>
                   <td colspan="100%">
                     <input type="text" name="editor" list="path-choices" 
@@ -1157,15 +1219,15 @@ const editor = {
                     <datalist id="path-choices">
                       <option :value="value" v-for="(value, index) in pathChoices">
                       </option>
-                      
                     </datalist>
                   </td>
                 </tr>
               </table>
-
-
             </div>
         </div>
+        <!-- Header Input -->
+
+
         <!-- Textarea -->
         <textarea name="background-color: white;" id="textarea"
                   placeholder="Write here..."
@@ -1177,74 +1239,69 @@ const editor = {
 
         <!-- Mode buttons -->
         <span class="flex">
-          <!-- <label>Mode</label> -->
-          <button class="btn btn-active" id="btn-full" @click="changeArea('full')" type="button" >Full</button>
-          <button class="btn" id="btn-preview" @click="changeArea('preview')" type="button" >Preview</button>
+          <Btn bid="btn-full" :is-active="true" name="Full" :click="() => changeArea('full')"/>
+          <Btn bid="btn-preview" name="Preview" :click="() => changeArea('preview')"/>
         </span>
 
-        <button type="button" class="btn" @click="editProfile" id="btn-profile">Edit Profile</button>
+        <Btn bid="btn-profile" name="Edit Profile"
+             :click="editProfile"/>
 
         <!-- Select Tab -->
         <div class="tab-options flex flex-c mt-15">
-          <label>Tabs</label>
           <!-- Dropdown -->
-          <select id="tab-select" @change="changeTab" v-if="currentAreaObj">
-              <option :value="name" v-for="(value, name) in currentAreaObj.tabs">
-                {{ name }}
-              </option>
-          </select>
+          <Dropdown label="Tabs"
+                    sid="tab-select"
+                    :change="changeTab"
+                    :option-list="currentAreaObj.tabs"
+                    v-if="Object.keys(currentAreaObj).length != 0"
+                    />
 
           <!-- Edit -->
           <span class="flex">
-            <button type="button" class="btn" id="tab-new-btn" @click="openTabbtn('new')">New</button>
-            <button type="button" class="btn" id="tab-rename-btn" @click="openTabbtn('rename')">Rename</button>
+            <Btn bid="tab-new-btn" name="New"
+                 :click="() => openTabbtn('new')"/>
+                 
+            <Btn bid="tab-rename-btn" name="Rename"
+                 :click="() => openTabbtn('rename')"/>
           </span>
-          <button type="button" class="btn" @click="tabDelete('delete')">Delete</button>
+          <Btn bid="tab-delete-btn" name="Delete"
+               :click="() => tabDelete('delete')"/>
+        
         </div>
+        <!-- Select Tab -->
 
+        
         <!-- Tags -->
-        <div class="flex flex-c mt-15">
-          <label>Tags</label>
-          <input type="text" id="tags-input" class="input width-100"
-                 placeholder="tagA tagB tagC">
-        </div>
-
+        <EditorInput label="Tags"
+                     iid="input-tags"
+                     placeholder="tagA tagB tagC"/>
+                     
         <!-- Parent -->
-        <div class="flex flex-c mt-15">
-          <label>Parent</label>
-          <input type="text" id="parent-input" class="input width-100"
-                 placeholder="home">
-        </div>
+        <EditorInput label="Parent"
+                     iid="input-parent"
+                     did="parent-choices"
+                     placeholder="home"
+                     :datalist="Object.keys(this.directory).sort()"/>
 
         <hr class="hr">
    
         <!-- Tab:New -->
-        <div class="flex flex-c boxes hide" id="tab-new">
-          <label>New Tab</label>
-          <input type="text" id="tab-new-input" class="input width-100"
-                 placeholder="home">
-
-          <div class="flex">
-            <button type="button" class="btn" @click="tabNew">Ok</button>
-            <button type="button" class="btn" @click="closeTabbtn('new')">Cancel</button>
-          </div>
-        </div>       
-
+        <EditorInputBox ref="tabnew" 
+                        label="New Tab"
+                        iid="tab-new-input"
+                        obid="tab-new-btn"
+                        placeholder="home"
+                        :ok-handler="tabNew"/>        
 
         <!-- Tab:Rename -->
-        <div class="flex flex-c boxes hide" id="tab-rename">
-          <label>Rename Tab</label>
-          <input type="text" id="tab-rename-input" class="input width-100"
-                 placeholder="home">
-
-          <div class="flex">
-            <button type="button" class="btn" @click="tabRename">Ok</button>
-            <button type="button" class="btn" @click="closeTabbtn('rename')">Cancel</button>
-          </div>
-        </div>       
-
-
-
+        <EditorInputBox ref="tabrename" 
+                        label="Rename Tab"
+                        iid="tab-rename-input"
+                        obid="tab-rename-btn"
+                        placeholder="home"
+                        :ok-handler="tabRename"
+                       />
+        
         <div class="flex float-bottom width-100">
           <button class="btn btn-green" @click="save">Save</button>
           <button class="btn btn-red" @click="exit">Exit</button>
@@ -1255,6 +1312,80 @@ const editor = {
     </div> 
 
   </div>
+  `
+}
+
+const editorinput = {
+  name: "EditorInput",
+  props: {
+    label: { type:String, required: true },
+    iid: { type:String, required: true },
+    did: { type:String },
+    placeholder: { type:String},
+    datalist:  { type: Array }
+  },
+  template: `
+    <div class="flex flex-c mt-15">
+      <label>{{ label }}</label>
+      <input type="text" :id="iid" class="input width-100"
+             :placeholder="placeholder" :list="did">
+      <template v-if="datalist">
+        <datalist  datalist :id="did">
+          <option :value="value" v-for="(value, index) in datalist"></option>
+        </datalist>
+      </template>
+
+    </div>
+
+  `
+}
+
+const editorinputbox = {
+  name: "EditorInputBox",
+  data() {
+    return {
+      bid: makeid(5)
+    }
+  },
+  props: {
+    label: { type:String, required: true },
+    iid: { type:String, required: true }, // Input id
+    obid: { type:String, required: true }, // Open Button id
+    placeholder: { type:String},
+    okHandler: {type: Function, },
+  },
+  methods: {
+    toggle() {
+      document.getElementById(this.bid).classList.toggle("hide")
+      document.getElementById(this.obid).classList.toggle("btn-active")
+    },
+    ok() {
+      this.okHandler()
+      this.cancel()
+      this.removeBtnHighight()
+    },
+    cancel() {
+      document.getElementById(this.bid).classList.add("hide")
+      this.removeBtnHighight()
+    },
+    removeBtnHighight() {
+      document.getElementById(this.obid).classList.remove("btn-active")
+    }
+  },
+  template: `
+
+  <div class="flex flex-c boxes hide" :id="bid">
+    <label>{{label}}</label>
+    <input type="text" :id="iid" class="input width-100"
+           :placeholder="placeholder">
+
+    <div class="flex">
+      <button type="button" class="btn" @click="ok">Ok</button>
+      <button type="button" class="btn" @click="cancel">Cancel</button>
+    </div>
+  </div>       
+
+  
   `
 }
 
@@ -1415,20 +1546,19 @@ const sidebar = {
     }
   },
   props: {
-    projectTitle: { type: String, default: "Default" },
-    projectSubtitle: { type: String, default: "Default Subtitle" },
-    directory: { type: Object, required: true },
+    metadata: { type: Object, required: true},
     rerender: { type: Boolean, default: true }
   },
   watch: {
-    directory: {
+    metadata: {
       async handler(value) {
         const resp = await (fetch("assets/nav.md"))
         if (resp.status === 404) {
           console.log("Nav not found")
           return
         }
-    
+
+
         const navs = (await resp.text()).trim().split("\n")
         let lastNav = ""
         for (const nav of navs) {
@@ -1437,13 +1567,13 @@ const sidebar = {
           
           // if has subnav
           if (newnav.startsWith("- ")) {
-            this.navs[lastNav]['subnav'][newnav] = autoLink(nav.replace(/\-\s/, ''), this.directory)
+            this.navs[lastNav]['subnav'][newnav] = autoLink(nav.replace(/\-\s/, ''), this.metadata.directory)
             continue
           }
           
           // if No subnav
           this.navs[newnav] = {
-            main: autoLink(nav, this.directory),
+            main: autoLink(nav, this.metadata.directory),
             subnav: {}
           }
           lastNav = newnav
@@ -1502,12 +1632,12 @@ const sidebar = {
         <button class="close" @click="closeSidebar">✕</button>
         <!-- Titles section -->
         <div class="titles">
-          <h1 class="title">{{ projectTitle }}</h1>
-          <h2 class="subtitle">{{ projectSubtitle }}</h2>
+          <h1 class="title">{{ metadata.projectTitle }}</h1>
+          <h2 class="subtitle">{{ metadata.projectSubtitle }}</h2>
         </div>
         <!-- Search Box -->
         <div class="inputs">
-        <Searchbox :directory="directory"/> <Toggle :projectTitle="projectTitle"/>
+        <Searchbox :directory="metadata.directory"/> <Toggle :projectTitle="metadata.projectTitle"/>
         </div>
         
         <!-- Navigation Links -->
@@ -1645,6 +1775,10 @@ const sidebaredit = {
     addPage() {
       changePage('add-page')
       this.openEditor()
+    },
+    openDelete() {
+      document.getElementById("delete-confirm").classList.remove("hide")
+      console.log(document.getElementById("delete-confirm"))
     }
   },
   mounted() {
@@ -1677,7 +1811,7 @@ const sidebaredit = {
     </button>
 
     
-    <button class="button--sidebaredit">
+    <button class="button--sidebaredit" @click="openDelete">
       <svg xmlns="http://www.w3.org/2000/svg" width="19" height="26" viewBox="0 0 12 16">
         <path d="M4.85355 7.14645C4.65829 6.95118 4.34171 6.95118 4.14645 7.14645C3.95118 7.34171 3.95118 7.65829 4.14645 7.85355L5.29289 9L4.14645 10.1464C3.95118 10.3417 3.95118 10.6583 4.14645 10.8536C4.34171 11.0488 4.65829 11.0488 4.85355 10.8536L6 9.70711L7.14645 10.8536C7.34171 11.0488 7.65829 11.0488 7.85355 10.8536C8.04882 10.6583 8.04882 10.3417 7.85355 10.1464L6.70711 9L7.85355 7.85355C8.04882 7.65829 8.04882 7.34171 7.85355 7.14645C7.65829 6.95118 7.34171 6.95118 7.14645 7.14645L6 8.29289L4.85355 7.14645Z"/>
         <path d="M12 14V4.5L7.5 0H2C0.895431 0 0 0.89543 0 2V14C0 15.1046 0.895431 16 2 16H10C11.1046 16 12 15.1046 12 14ZM7.5 3C7.5 3.82843 8.17157 4.5 9 4.5H11V14C11 14.5523 10.5523 15 10 15H2C1.44772 15 1 14.5523 1 14V2C1 1.44772 1.44772 1 2 1H7.5V3Z"/>
@@ -1778,11 +1912,12 @@ const toggle = {
     }
   },
   props: {
-    projectTitle: { type: String, required: true }
+    projectTitle: { required: true }
   },
   watch: {
     projectTitle: {
       handler(value) {
+        if (typeof value === undefined) return
         this.uniqueId = this.projectTitle.toLowerCase().trim().replace(/\s/g, "-")+"-storage"
 
         if (localStorage.getItem(this.uniqueId) === null) {

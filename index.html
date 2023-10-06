@@ -16,21 +16,20 @@
 <body onload="start()">
 
   <div id="app">
-    <Editor ref="editor" :directory="directory" @save-page="savePage" :cur-page-id="pageId"></Editor>
-    
+    <Editor ref="editor" :directory="metadata.directory" @save-page="savePage" :cur-page-id="pageId"></Editor>
+    <Confirmbox message="Delete this page?" id="delete-confirm" :handler="deletePage"/></Confirmbox>    
     <div class="container full" id="top">
 
       <!-- Sidebar for navigation -->
-      <Sidebar :directory="directory"
-               :project-title="projectTitle"
-               :project-subtitle="projectSubtitle"
-               :rerender="rerender">
+      <Sidebar 
+               :rerender="rerender"
+               :metadata="metadata">
       </Sidebar>
       
       <!-- Card component - All contents comes here -->
       <Card :title="pageName"
             :content="content"
-            :directory="directory"
+            :directory="metadata.directory"
             :toggle-state="toggleState"
             :page-id="pageId"
             @processed-content="(value) => $refs.editor.start(value)"

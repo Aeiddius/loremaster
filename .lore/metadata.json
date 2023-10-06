@@ -5,7 +5,7 @@
     "home": {
       "title": "Home",
       "path": "content/home.json",
-      "parent": "geh"
+      "parent": ""
     },
     "nav": {
       "title": "Navigation",
@@ -50,7 +50,7 @@
     "giselle-iridao": {
       "title": "Giselle Iridao",
       "path": "content/story/tboah/characters/deuteragonist/giselle-iridao.json",
-      "parent": "tboah-characters"
+      "parent": ""
     },
     "eltia-axolin": {
       "title": "Eltia Axolin",
@@ -61,11 +61,6 @@
       "title": "Mayumi Severino",
       "path": "content/story/tboah/characters/deuteragonist/mayumi-severino.json",
       "parent": "tboah-characters"
-    },
-    "tie": {
-      "title": "The Irregular Entity",
-      "path": "content/story/tie/tie.json",
-      "parent": ""
     },
     "marcus-romulo": {
       "title": "Marcus Romulo",
@@ -165,11 +160,6 @@
     "amihan-villanueva": {
       "title": "Amihan Villanueva",
       "path": "content/story/tboah/characters/e-class/amihan-villanueva.json",
-      "parent": "tboah-characters"
-    },
-    "ni\u00c3\u00b1a-bach": {
-      "title": "Ni\u00c3\u00b1a Bach",
-      "path": "content/story/tboah/characters/e-class/ni\u00c3\u00b1a-bach.json",
       "parent": "tboah-characters"
     },
     "ancestor-parents": {
@@ -337,10 +327,25 @@
       "path": "content/lore/beings/lady-of-the-ashen-shroud.json",
       "parent": "beings"
     },
-    "ethan-moraless": {
+    "ethan-morales": {
       "title": "Ethan Morales",
       "path": "content/story/tboah/characters/protagonist/ethan-morales.json",
-      "parent": ""
+      "parent": "tboah-characters"
+    },
+    "akiyoshi-althaus": {
+      "title": "Akiyoshi Althaus",
+      "path": "content/story/tboah/characters/a-class//akiyoshi-althaus.json",
+      "parent": "tboah-characters"
+    },
+    "ni\u00f1a-bach": {
+      "title": "Ni\u00f1a-bach",
+      "path": "content/story/tboah/characters/e-class/ni\u00f1a-bach.json",
+      "parent": "tboah-characters"
+    },
+    "tie": {
+      "title": "The Irregular Entity",
+      "path": "content/story/tie/tie.json",
+      "parent": "story"
     }
   }
 }

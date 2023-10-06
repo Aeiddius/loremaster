@@ -15,20 +15,19 @@ const sidebar = {
     }
   },
   props: {
-    projectTitle: { type: String, default: "Default" },
-    projectSubtitle: { type: String, default: "Default Subtitle" },
-    directory: { type: Object, required: true },
+    metadata: { type: Object, required: true},
     rerender: { type: Boolean, default: true }
   },
   watch: {
-    directory: {
+    metadata: {
       async handler(value) {
         const resp = await (fetch("assets/nav.md"))
         if (resp.status === 404) {
           console.log("Nav not found")
           return
         }
-    
+
+
         const navs = (await resp.text()).trim().split("\n")
         let lastNav = ""
         for (const nav of navs) {
@@ -37,13 +36,13 @@ const sidebar = {
           
           // if has subnav
           if (newnav.startsWith("- ")) {
-            this.navs[lastNav]['subnav'][newnav] = autoLink(nav.replace(/\-\s/, ''), this.directory)
+            this.navs[lastNav]['subnav'][newnav] = autoLink(nav.replace(/\-\s/, ''), this.metadata.directory)
             continue
           }
           
           // if No subnav
           this.navs[newnav] = {
-            main: autoLink(nav, this.directory),
+            main: autoLink(nav, this.metadata.directory),
             subnav: {}
           }
           lastNav = newnav
@@ -102,12 +101,12 @@ const sidebar = {
         <button class="close" @click="closeSidebar">✕</button>
         <!-- Titles section -->
         <div class="titles">
-          <h1 class="title">{{ projectTitle }}</h1>
-          <h2 class="subtitle">{{ projectSubtitle }}</h2>
+          <h1 class="title">{{ metadata.projectTitle }}</h1>
+          <h2 class="subtitle">{{ metadata.projectSubtitle }}</h2>
         </div>
         <!-- Search Box -->
         <div class="inputs">
-        <Searchbox :directory="directory"/> <Toggle :projectTitle="projectTitle"/>
+        <Searchbox :directory="metadata.directory"/> <Toggle :projectTitle="metadata.projectTitle"/>
         </div>
         
         <!-- Navigation Links -->

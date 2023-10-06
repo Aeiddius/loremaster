@@ -80,6 +80,10 @@
 }
 
 
+.no-scroll {
+  overflow: hidden;
+}
+
 // Media
 // @media screen and (max-width: 1200px) {
 //   .card {
@@ -95,7 +99,7 @@
 
 @media screen and (max-width: 900px) {
   .card-container {
-    margin-left: 40px;
+    margin-left: 50px;
   }
   #title {
     font-size: 2.5em;

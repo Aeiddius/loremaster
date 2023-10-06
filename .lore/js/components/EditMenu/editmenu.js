@@ -8,6 +8,10 @@ const editmenu = {
     add() {
       changePage('add-page')
       this.open()
+    },
+    openDelete() {
+      document.getElementById("delete-confirm").classList.remove("hide")
+      console.log(document.getElementById("delete-confirm"))
     }
   },
   template: `
@@ -15,7 +19,7 @@ const editmenu = {
       <h1 class="titles">Edit Mode</h1>
       <button class="button--edit" @click="open">Edit Page</button>
       <button class="button--edit" @click="add">Add Page</button>
-      <button class="button--edit button--edit-red">Delete Page</button>
+      <button class="button--edit button--edit-red" @click="openDelete">Delete Page</button>
     </div>
   `
 }  

@@ -12,13 +12,28 @@ class Metadata {
     this.directory = this.metadata.directory
     this.projectTitle = this.metadata.title;
     this.projectSubtitle = this.metadata.subtitle;
+
+    // Set Metadata
+    document.getElementsByTagName("title")[0].innerText = this.projectTitle;
   }
   
-  updateDirKey(oldKey, newKey, value) {
+  updateDirKey(oldKey, newKey, metaEntry) {
     if (oldKey !== newKey) {
       delete this.metadata.directory[oldKey]
     }
-    this.metadata.directory[newKey] = value[newKey]
+    this.metadata.directory[newKey] = metaEntry[newKey]
+    this.updateLink(newKey)
+  }
+
+  deleteDirkey(key){
+    delete this.metadata.directory[key]
+  }
+
+  updateLink(newKey) {
+    const url = new URL(window.location);  
+    url.searchParams.set("p", newKey);
+    history.replaceState(null, null, ' ');
+    history.pushState({}, "", url);
   }
 }
 
@@ -26,14 +41,10 @@ function start() {
   const app = Vue.createApp({
     data() {
       return {
-        metadata: {},
+        metadata: {directory: {}},
         directory: {},
         rerender: true,
         toggleState: false,
-
-        // Sidebar
-        projectTitle: "",
-        projectSubtitle: "",
         
         // Card
         content: {},
@@ -44,15 +55,8 @@ function start() {
     },
     async mounted() {
       // Get Metadata
-      
       const metadata = await this.fetchData(".lore/metadata.json")
       this.metadata = new Metadata(metadata)
-      // console.log(this.metadata)  
-
-      // Save key-info
-      this.projectTitle = metadata.title;
-      this.projectSubtitle = metadata.subtitle;
-      document.getElementsByTagName("title")[0].innerText = this.projectTitle;
 
       // Get Directory
       this.directory = metadata.directory
@@ -75,13 +79,11 @@ function start() {
       });
 
       setup()
-
-      console.log("Is Web view: ", isWebView)
     },
     methods: {
       async fetchData(url) {
 
-        const resp = await fetch(url)
+        const resp = await fetch(url, {cache: "no-store"}) // cache no store added because backend pywebview is caching fetch and not updating when newly saved
         if (resp.status === 404) {
           return "Error"
         }
@@ -176,23 +178,28 @@ function start() {
         if (!this.directory.hasOwnProperty(pageId)) pageId = "404"
         return pageId
       },
-      savePage(newPage, metaEntry) {
-        const key = Object.keys(metaEntry)[0]
-
-        this.directory[key] = metaEntry[key]
-        if (key !== this.pageId) {
-          delete this.directory[this.pageId]
-          this.pageId = key
-          const url = new URL(window.location);  
-          url.searchParams.set("p", this.pageId);
-          history.replaceState(null, null, ' ');
-          history.pushState({}, "", url);
-        }
+      savePage(path, newPage, metaEntry) {
+        const key = getKey(metaEntry)[0]
+        this.metadata.updateDirKey(this.pageId, key, metaEntry)
         
+        
+        
+        if (isWebView) {
+          pywebview.api.savePage(this.pageId, newPage, metaEntry)
+        }
+        this.pageId = key
         this.reload(this.pageId, false, newPage)
+      },
+      deletePage() {
+        this.metadata.deleteDirkey(this.pageId)
+        changePage("home")
+
+        if (isWebView) {
+          pywebview.api.deletePage(this.pageId)
+        }
       }
     }
-  })
+  }) 
 
   // https://stackoverflow.com/questions/36170425/detect-click-outside-element
   const clickOutside = {
@@ -223,7 +230,8 @@ function setup() {
   window.addEventListener('pywebviewready',()=>   {
     isWebView = true
   })
-
+  
+  console.log("Is Web view: ", isWebView)
   // source: https://css-tricks.com/snippets/jquery/smooth-scrolling/
   window.scroll({
     top: 2500, 
@@ -236,22 +244,6 @@ function setup() {
     top: 100, // could be negative value
     left: 0, 
     behavior: 'smooth' 
-  });
-
-  const clickOutside = {
-  beforeMount: (el, binding) => {
-    el.clickOutsideEvent = event => {
-      // here I check that click was outside the el and his children
-      if (!(el == event.target || el.contains(event.target))) {
-        // and if it did, call method provided in attribute value
-        binding.value();
-      }
-    };
-    document.addEventListener("click", el.clickOutsideEvent);
-  },
-  unmounted: el => {
-    document.removeEventListener("click", el.clickOutsideEvent);
-  },
-};  
+  });  
 }
  
