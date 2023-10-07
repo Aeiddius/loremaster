@@ -9,7 +9,7 @@ const editorinput = {
   },
   template: `
     <div class="flex flex-c mt-15">
-      <label>{{ label }}</label>
+      <label :for="iid">{{ label }}</label>
       <input type="text" :id="iid" class="input width-100"
              :placeholder="placeholder" :list="did">
       <template v-if="datalist">

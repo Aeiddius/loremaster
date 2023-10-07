@@ -27,132 +27,148 @@ const editor = {
   methods: {
     start(value){
       // Set Variables
-      this.pageId = this.curPageId
-      this.pageData = copyobj(value["areas"])
-      this.changeArea('full')
+      this.pageId = this.curPageId;
+      this.pageData = copyobj(value["areas"]);
+      this.changeArea('full');
 
 
       // Create path directory
       const paths = [];
       for (const entryId in this.metadata.directory) {
-        const entry = splitStringAtLast(this.metadata.directory[entryId].path, '/')[0]
-        const rehashed_path = entry.replace(/\//g, "\\")
-        if (!paths.includes(rehashed_path)) paths.push(rehashed_path)
+        const entry = splitStringAtLast(this.metadata.directory[entryId].path, '/')[0];
+        const rehashed_path = entry.replace(/\//g, "\\");
+        if (!paths.includes(rehashed_path)) paths.push(rehashed_path);
       }
-      this.pathChoices = paths.sort()
+      this.pathChoices = paths.sort();
+      
+      // Check if template
+
+      document.getElementById("saveAsTemplate").checked = isCurrentPageTemplate;
+
 
       // Create parent choices
-
       if (!this.metadata.directory.hasOwnProperty(this.pageId) || this.pageId === "404") {
-        document.getElementById("input-page-name").value = this.pageId
-        document.getElementById("input-page-id").value = this.pageId
-        document.getElementById("input-path").value = ""
+        document.getElementById("input-page-name").value = this.pageId;
+        document.getElementById("input-page-id").value = this.pageId;
+        document.getElementById("input-path").value = "";
         return
       }
 
       // Set pagename
-      document.getElementById("input-page-name").value = this.pageId == "add-page" ? "" : this.metadata.directory[this.pageId].title
-      document.getElementById("input-page-id").value = this.pageId == "add-page" ? "" : this.pageId
-      document.getElementById("input-path").value = this.pageId == "add-page" ? "" : this.metadata.directory[this.pageId].path.replace(`${this.pageId}.json`, "").replace(/\//g, "\\")
-      document.getElementById("input-parent").value = this.pageId == "add-page" ? "" : this.metadata.directory[this.pageId].parent
+      
+      this.setTemplate()
+
     },
     changeArea(area) {
       // Area validation CCheck
       if (area == "preview" && !this.pageData.hasOwnProperty("preview")) {
-        this.pageData["preview"] = { tabs: { "default": "" } }
+        this.pageData["preview"] = { tabs: { "default": "" } };
       }
 
       // Set initial variables
-      this.isCurrentProfile = false
-      this.currentArea = area
-      this.currentTab = Object.keys(this.pageData[area].tabs)[0]
-      this.currentAreaObj = copyobj(this.pageData[area])
+      this.isCurrentProfile = false;
+      this.currentArea = area;
+      this.currentTab = Object.keys(this.pageData[area].tabs)[0];
+      this.currentAreaObj = copyobj(this.pageData[area]);
 
       // Set <Tabs btn active>
       for (const ar of ['full', 'preview']) {
-        if (ar == area) this.getNode(`btn-${ar}`).classList.add("btn-active")
-        else this.getNode(`btn-${ar}`).classList.remove("btn-active")
+        if (ar == area) this.getNode(`btn-${ar}`).classList.add("btn-active");
+        else this.getNode(`btn-${ar}`).classList.remove("btn-active");
       }
 
       // Remove active status of btn-profile
-      this.getNode("btn-profile").classList.remove("btn-active")
+      this.getNode("btn-profile").classList.remove("btn-active");
 
-      document.getElementById("tab-rename-input").value = this.currentTab
+      document.getElementById("tab-rename-input").value = this.currentTab;
 
       // Set <textarea>
-      this.refreshTextArea()
+      this.refreshTextArea();
     },
 
     changeTab(event) {
-      this.isCurrentProfile = false
-      this.currentTab = event instanceof Event ? event.currentTarget.value : event
-      this.getNode("tab-rename-input").value = this.currentTab
-      this.refreshTextArea()
+      this.isCurrentProfile = false;
+      this.currentTab = event instanceof Event ? event.currentTarget.value : event;
+      this.getNode("tab-rename-input").value = this.currentTab;
+      this.refreshTextArea();
     },
 
     async changeTemplate() {
-      const select = document.getElementById("template-select")
-      if (select.value === "n/a") return
+      const select = document.getElementById("template-select");
+      if (select.value === "") return;
 
-      const url = this.metadata.templates[select.value]
+      console.log("Select: ", select.value)
+      const url = this.metadata.directory[select.value].path;
 
-      const data = await fetchData(url)
-      this.start(data)
-      console.log(data)
+      const data = await fetchData(url);
+      this.start(data);
     },
 
     refreshTextArea(){
-      this.getNode("textarea").value = `${this.currentAreaObj.tabs[this.currentTab]}`
+      this.getNode("textarea").value = `${this.currentAreaObj.tabs[this.currentTab]}`;
     },
 
     editProfile() {
       if (this.isCurrentProfile == false) {
-        this.isCurrentProfile = true
-        this.getNode("textarea").value = `${jsyaml.dump(this.currentAreaObj.profile, 'utf8')}`
-        this.getNode("btn-profile").classList.add("btn-active")
+        this.isCurrentProfile = true;
+        this.getNode("textarea").value = `${jsyaml.dump(this.currentAreaObj.profile, 'utf8')}`;
+        this.getNode("btn-profile").classList.add("btn-active");
       } else {
-        this.isCurrentProfile = false 
-        this.refreshTextArea()
-        this.getNode("btn-profile").classList.remove("btn-active")
+        this.isCurrentProfile = false;
+        this.refreshTextArea();
+        this.getNode("btn-profile").classList.remove("btn-active");
       }
     },
 
     saveTextArea(event) {
       if (this.isCurrentProfile == false) {
-        this.pageData[this.currentArea].tabs[this.currentTab] = event.currentTarget.value
-        this.currentAreaObj.tabs[this.currentTab] = event.currentTarget.value
+        this.pageData[this.currentArea].tabs[this.currentTab] = event.currentTarget.value;
+        this.currentAreaObj.tabs[this.currentTab] = event.currentTarget.value;
       } else {
-        const profile =  jsyaml.load(event.currentTarget.value.trim(), 'utf8')
-        this.pageData[this.currentArea].profile = profile
-        this.currentAreaObj.profile = profile
+        const profile =  jsyaml.load(event.currentTarget.value.trim(), 'utf8');
+        this.pageData[this.currentArea].profile = profile;
+        this.currentAreaObj.profile = profile;
       }
     },
 
     save() {
-      const tags = document.getElementById("input-tags").value.trim()
-      const parent = document.getElementById("input-parent").value.trim()
-      const path = document.getElementById("input-path").value.trim()
-      const pageName = document.getElementById("input-page-name").value.trim()
-      const pageId = document.getElementById("input-page-id").value.trim()
+      const tags = document.getElementById("input-tags").value.trim();
+      const parent = document.getElementById("input-parent").value.trim();
+      const path = document.getElementById("input-path").value.trim();
+      const pageName = document.getElementById("input-page-name").value.trim();
+      const pageId = document.getElementById("input-page-id").value.trim();
 
       // Validation
       if (pageName === "" || pageId === "" || path === ""){
-        console.log("pageName|pageId|path are required")
-        return
+        console.log("pageName|pageId|path are required");
+        return;
+      }
+
+      // if template
+      if (isCurrentPageTemplate === true) {
+        if (!pageId.includes("template-")) {
+          console.log("Wrong template id format. Must be \"template-name_here\"")
+          return
+        }
+        if (!path.startsWith('templates')) {
+          console.log("Wrong template path. Must start at \"templates\\id_here.json\"")
+          return
+        }
+        if (this.pageId == "add-page") this.page = pageId
       }
 
       // Remves empty preview
       if (this.pageData.hasOwnProperty("preview")) {
-        const tabs = this.pageData.preview.tabs
-        const tabsvalue = Object.keys(tabs)
+        const tabs = this.pageData.preview.tabs;
+        const tabsvalue = Object.keys(tabs);
         if (tabsvalue.length == 0 || (tabsvalue.length == 1 && tabs[tabsvalue[0]].trim() == "")) {
-          delete this.pageData.preview
+          delete this.pageData.preview;
         } 
       }
 
       // Validates path ending in "/"
-      let newPath = path.replace(/\\/g, "/")
-      if (!this.isLastCharSlash(newPath)) newPath = newPath + "/"
+      let newPath = path.replace(/\\/g, "/");
+      if (!this.isLastCharSlash(newPath)) newPath = newPath + "/";
 
       // Creates metadata.json entry
       const metaEntry = {
@@ -168,94 +184,109 @@ const editor = {
         "tags": tags,
         "parent": parent,
       }
-      console.log("NEW PATH: ", newPath + pageId.replace(/\ /g, "-") + ".json",)
       // emits saved page
-      this.$emit('save-page', path, newPage, metaEntry)
+      this.$emit('save-page', path, newPage, metaEntry);
 
-      console.log("Saved Successfully")
+      console.log("Saved Successfully");
     },
     tabNew() {
       // Checks if new tab name is empty
-      const tabname = this.getNode('tab-new-input').value.trim()
-      if (tabname === "") return
+      const tabname = this.getNode('tab-new-input').value.trim();
+      if (tabname === "") return;
 
       // Checks if tabname exists already
-      const tabs = Object.keys(this.currentAreaObj.tabs)
-      if (tabs.includes(tabname)) return
+      const tabs = Object.keys(this.currentAreaObj.tabs);
+      if (tabs.includes(tabname)) return;
 
       // Adds new tabname
-      this.pageData[this.currentArea].tabs[tabname] = ""
+      this.pageData[this.currentArea].tabs[tabname] = "";
       
       // Refresh
-      this.changeArea(this.currentArea)
+      this.changeArea(this.currentArea);
     },
     tabRename() {
       // Checks if renamed tab is empty
-      const tabname = this.getNode('tab-rename-input').value.trim()
-      if (tabname === "") return
+      const tabname = this.getNode('tab-rename-input').value.trim();
+      if (tabname === "") return;
 
       // Checks if tabname exists already
-      const tabs = Object.keys(this.currentAreaObj.tabs)
-      if (tabs.includes(tabname)) return
+      const tabs = Object.keys(this.currentAreaObj.tabs);
+      if (tabs.includes(tabname)) return;
 
       // Save current tab
-      this.pageData[this.currentArea].tabs[tabname] = `${this.pageData[this.currentArea].tabs[this.currentTab]}`
+      this.pageData[this.currentArea].tabs[tabname] = `${this.pageData[this.currentArea].tabs[this.currentTab]}`;
       
       // Delete tab
-      delete this.pageData[this.currentArea].tabs[this.currentTab]
+      delete this.pageData[this.currentArea].tabs[this.currentTab];
 
       // Refresh
-      this.changeArea(this.currentArea)
+      this.changeArea(this.currentArea);
     },
     tabDelete() {
       // delete this.pageData
 
-      const keys = Object.keys(this.pageData[this.currentArea].tabs).length
+      const keys = Object.keys(this.pageData[this.currentArea].tabs).length;
       if (keys == 1) return
 
-      delete this.pageData[this.currentArea].tabs[this.currentTab]
+      delete this.pageData[this.currentArea].tabs[this.currentTab];
 
       // Refresh
-      this.changeArea(this.currentArea)
+      this.changeArea(this.currentArea);
     },
     openTabbtn(id) {
       if (id==='new') {
-        this.$refs.tabnew.toggle()
+        this.$refs.tabnew.toggle();
       } else if (id === 'rename') {
-        this.$refs.tabrename.toggle()
+        this.$refs.tabrename.toggle();
       }
     },
     closeTabbtn(id) {
-      this.getNode(`tab-${id}-btn`).classList.remove("btn-active")
-      this.getNode(`tab-${id}`).classList.add('hide')
+      this.getNode(`tab-${id}-btn`).classList.remove("btn-active");
+      this.getNode(`tab-${id}`).classList.add('hide');
     },
 
     saveTemplate() {
-      console.log("esss")
 
-      const checked = document.getElementById("saveAsTemplate").checked
-      const name = document.getElementById("input-page-name")
+      const checked = document.getElementById("saveAsTemplate").checked;
+
+      isCurrentPageTemplate = checked;
+      this.setTemplate();
+    },
+
+
+    setTemplate() {
+      const pageId = document.getElementById("input-page-id")
+      const pageName = document.getElementById("input-page-name")
       const path = document.getElementById("input-path")
-      name.disabled = checked;
-      path.disabled = checked
+      const parent = document.getElementById("input-parent")
 
-      this.isSaveAsTemplate = checked
-      console.log(checked)
+      if (isCurrentPageTemplate && !this.metadata.templates.includes(this.pageId)) {
+        pageId.value = "template-"
+        pageName.value = "Template: "
+        path.value = "templates/"
+        parent.value = "templates"
+      } else {
+        pageId.value = this.pageId == "add-page" ? "" : this.pageId;
+        pageName.value = this.pageId == "add-page" ? "" : this.metadata.directory[this.pageId].title;
+        path.value = this.pageId == "add-page" ? "" : this.metadata.directory[this.pageId].path.replace(`${this.pageId}.json`, "").replace(/\//g, "\\");
+        parent.value = this.pageId == "add-page" ? "" : this.metadata.directory[this.pageId].parent;
+      }
+
     },
 
     exit() {
-      this.getNode("editor-box").classList.add("hide")
+      this.getNode("editor-box").classList.add("hide");
     },
     getNode(id) {
-      return document.getElementById(id)
+      return document.getElementById(id);
     },
     oninput(e) {
       if (e.target.value.trim() == "") {
-        e.target.classList.add("invalid")
-        return
+        e.target.classList.add("invalid");
+        return;
       }
       if (e.target.classList.contains("invalid")) {
-        e.target.classList.remove("invalid")
+        e.target.classList.remove("invalid");
       }
     },
 
@@ -270,9 +301,9 @@ const editor = {
   mounted() {
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') {
-        const editor = document.getElementById("editor-box").classList
+        const editor = document.getElementById("editor-box").classList;
         if (!editor.contains("hide")) {
-          editor.add("hide")
+          editor.add("hide");
         }
       }
   });
@@ -291,7 +322,7 @@ const editor = {
               <table class="table width-100">
                 <!-- Data Input -->
                 <tr>
-                  <td><label for="input-papge-name">Name:</label></td>
+                  <td><label for="input-page-name">Name:</label></td>
                   <td><input class="input width-100" id="input-page-name" @input="(event) => oninput(event)" v-on:blur="oninput"></td>
                   <td><label for="input-page-id">Id</label></td>
                   <td><input class="input width-100" id="input-page-id" @input="(event) => oninput(event)" v-on:blur="oninput"></td>
@@ -378,6 +409,7 @@ const editor = {
                     sid="template-select"
                     :option-list="this.metadata.templates"
                     :change="changeTemplate"
+                    :isArray="true"
                     v-if="Object.keys(currentAreaObj).length != 0"/>
 
           <div class="checkbox">

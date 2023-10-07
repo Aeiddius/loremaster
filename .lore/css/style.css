@@ -16,7 +16,6 @@ html {
   /* Improve consistency of default fonts in all browsers. (https://github.com/sindresorhus/modern-normalize/issues/3) */
   font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   line-height: 1.15; /* 1. Correct the line height in all browsers. */
-  -webkit-text-size-adjust: 100%; /* 2. Prevent adjustments of font size after orientation changes in iOS. */
   -moz-tab-size: 4; /* 3. Use a more readable tab size (opinionated). */
   -o-tab-size: 4;
      tab-size: 4; /* 3 */
@@ -413,10 +412,6 @@ summary {
   display: flex;
   align-items: baseline;
 }
-.card #card-content .header1 a {
-  height: -moz-fit-content;
-  height: fit-content;
-}
 
 #title {
   margin: 0px;
@@ -535,44 +530,32 @@ summary {
   width: fit-content;
   height: 100%;
 }
-
-.button--edit {
-  border: none;
-  border-radius: 5px;
-  background-color: #4584FF;
-  color: white;
-  transition: 0.1s linear;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
-  cursor: pointer;
-  font-weight: 100 !important;
-  font-style: normal;
-  font-size: 14px;
-  margin-bottom: 10px;
+#editmode h1 {
+  font-size: 1.4em;
+  font-family: cambria;
+  font-weight: 100;
 }
-.button--edit:hover {
+
+.btn--dark:hover {
   outline: 2px solid white;
-}
-.button--edit:active {
-  background-color: rgba(69, 132, 255, 0.7);
+  transform: scale(1);
 }
 
-.button--edit-red {
+.btn--red {
   background-color: #F44336 !important;
-}
-.button--edit-red:hover {
-  outline: 2px solid white;
-}
-.button--edit-red:active {
-  background-color: rgba(244, 67, 54, 0.7) !important;
 }
 
 .template-list {
   width: 100%;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
 }
 .template-list h2 {
-  font-size: 20px;
+  font-size: 1.4em;
+  font-family: cambria;
+  font-weight: 100;
+  margin-bottom: 3px;
 }
 .template-list select {
   padding: 10px;
@@ -862,20 +845,6 @@ summary {
   box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 }
 
-.editor-bar {
-  background-color: #252525;
-  height: 100%;
-  width: 40px;
-  padding: 0px;
-  border-right: 1px solid rgba(255, 255, 255, 0.12);
-  padding-top: 5px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  gap: 10px;
-  align-items: flex-start;
-}
-
 .titles {
   margin: 10px 3px;
 }
@@ -972,14 +941,13 @@ summary {
 }
 .button--sidebaredit {
   width: 100%;
+  padding: 2px 5px;
+  border: none;
+  border-radius: 4px;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-shrink: 0;
-  margin-right: -5px;
-  padding: 2px 5px;
-  border: none;
-  border-radius: 4px;
   background-color: transparent;
   color: white;
   font-size: 1.3em;
@@ -1001,6 +969,19 @@ summary {
 }
 .button--sidebaredit svg {
   fill: rgba(255, 255, 255, 0.3);
+}
+
+.editor-bar {
+  height: 100%;
+  width: 40px;
+  padding: 0px;
+  padding-top: 5px;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background-color: #252525;
 }
 
 .button {
@@ -1051,8 +1032,7 @@ summary {
 }
 
 .toggle {
-  height: 100%;
-  width: 40px;
+  width: 26px;
   display: flex;
 }
 .toggle input[type=checkbox] {
@@ -1063,9 +1043,9 @@ summary {
 .toggle label {
   cursor: pointer;
   text-indent: -9999px;
-  width: 40px;
+  width: 26px;
   height: 20px;
-  background: #252525;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   display: block;
   border-radius: 4px;
   position: relative;
@@ -1073,23 +1053,22 @@ summary {
 .toggle label:after {
   content: "";
   position: absolute;
-  top: 4px;
-  left: 4px;
-  width: 20px;
-  height: 12px;
-  background: #191919;
-  border-radius: 4px;
+  top: 3px;
+  left: 2px;
+  width: 13px;
+  height: 11px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
   transition: 0.3s;
 }
-.toggle input:checked + label {
-  background: #4584FF;
-}
 .toggle input:checked + label:after {
-  left: calc(100% - 4px);
+  left: calc(100% - 2px);
   transform: translateX(-100%);
+  background: #4584FF;
 }
 .toggle label:active:after {
   width: width30px;
+  border: 2px solid #4584FF;
 }
 
 * {

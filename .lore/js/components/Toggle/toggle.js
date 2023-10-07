@@ -34,9 +34,9 @@ const toggle = {
     }
   },
   template: `
-    <span class="toggle">
+    <div class="toggle">
       <input type="checkbox" id="switch" @click="toggleArea"/>
       <label for="switch">Toggle</label>
-    </span>
+    </div>
   `
 }

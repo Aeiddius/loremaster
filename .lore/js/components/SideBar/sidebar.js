@@ -3,7 +3,7 @@ const sidebar = {
   data() {
     return {
       navs: {},
-      test: "Asd",
+
     }
   },
   components: ['Searchbox', 'Toggle', 'Editbar'],
@@ -20,7 +20,9 @@ const sidebar = {
   },
   watch: {
     metadata: {
-      async handler(value) {
+    immediate: true,
+    deep: true,
+    async handler(value) {
         const resp = await (fetch("assets/nav.md"))
         if (resp.status === 404) {
           console.log("Nav not found")
@@ -81,21 +83,20 @@ const sidebar = {
         this.pos.style.left = "-500px" 
         this.card.style.marginLeft = "0px"
       }
-    }
+    },
   },
   template: `
   
   <div class="sidebar" v-click-outside="hidesidebar">
 
-    <div class="editor-bar">
-      <Sidebarbtn></Sidebarbtn>
-      <SidebarEdit></SidebarEdit>
-    </div>  
+
+    <SidebarEdit :projectTitle="metadata.projectTitle"></SidebarEdit>
+
  
 
     <div class="user" id="sidebarobj" style="left: 0px;">
-
-      <EditMenu :templates="metadata.templates"/>
+      
+      <EditMenu :metadata="metadata" v-if="rerender"/>
 
       <div id="navigation">
         <button class="close" @click="closeSidebar">✕</button>
@@ -105,8 +106,8 @@ const sidebar = {
           <h2 class="subtitle">{{ metadata.projectSubtitle }}</h2>
         </div>
         <!-- Search Box -->
-        <div class="inputs">
-        <Searchbox :directory="metadata.directory"/> <Toggle :projectTitle="metadata.projectTitle"/>
+      <div class="inputs">
+      <Searchbox :directory="metadata.directory"/> 
         </div>
         
         <!-- Navigation Links -->

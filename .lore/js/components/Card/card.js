@@ -34,19 +34,19 @@ const card = {
       deep: true,
       async handler(value) {      
         // Return if value is empty
-        if (isObjEmpty(value)) return  
+        if (isObjEmpty(value)) return;
         
         // Unnecessarily complcated preview removal.        Massive SKILL ISSUE lmao it works
-        let areas = copyobj(value['areas'])
+        let areas = copyobj(value['areas']);
         if (areas.hasOwnProperty("preview")) {
-          const length = Object.keys(areas["preview"].tabs).length
+          const length = Object.keys(areas["preview"].tabs).length;
           if (length == 1) {
-            const tabName = Object.keys(areas["preview"].tabs)[0]
+            const tabName = Object.keys(areas["preview"].tabs)[0];
             if (areas["preview"].tabs[tabName].trim().length == 0) {
-              delete areas["preview"]
+              delete areas["preview"];
             }
           } else if (length == 0) {
-            delete areas["preview"]
+            delete areas["preview"];
           }
 
         }
@@ -54,32 +54,32 @@ const card = {
         for (const area in areas) {
           for (const tab in areas[area].tabs) {
             
-            let content = areas[area].tabs[tab]
+            let content = areas[area].tabs[tab];
 
-            content = content.trim()
+            content = content.trim();
 
-            content = this.renderMD(content)
+            content = this.renderMD(content);
 
-            content = autoLink(content, this.directory)
+            content = autoLink(content, this.directory);
 
-            areas[area].tabs[tab] = content
+            areas[area].tabs[tab] = content;
           }
         }
-        this.areas = areas
+        this.areas = areas;
 
         // Refresh
-        await this.refresh()
+        await this.refresh();
 
-        this.makeTOC()
-        this.toggleArea()
+        this.makeTOC();
+        this.toggleArea();
 
-        this.$emit('processed-content', value)
+        this.$emit('processed-content', value);
       }
     },
     toggleState: {
       handler(value) {
         
-        this.toggleArea()
+        this.toggleArea();
       }
     }
   },
@@ -87,24 +87,24 @@ const card = {
 
     renderMD(value) {
 
-      let md = value.trim().split(/\n/gm)
-      let html = ``
+      let md = value.trim().split(/\n/gm);
+      let html = ``;
       for (const l of md) {
-        let line = l.trim()
+        let line = l.trim();
 
         // if empty line
         if (line == "") {
-          html += `<p>&nbsp</p>\n`
-          continue
+          html += `<p>&nbsp</p>\n`;
+          continue;
         }
 
         // Render Headers
         const hres = line.match(/(#+)\s/);
         if (hres) {
-          const h = hres[0].length
+          const h = hres[0].length;
           let btn = ``
           if (h == 2) {
-            btn = `<a class="button button--toc" onclick="document.querySelector('#top').scrollIntoView();">↑</a>`
+            btn = `<a class="button button--toc" onclick="document.querySelector('#top').scrollIntoView();">↑</a>`;
           } 
           
           html += `<span class="header1">
@@ -118,7 +118,7 @@ const card = {
         const bold = [...line.matchAll(/\*\*(.*?)\*\*/g)];
         if (bold.length != 0) {
           for (const b of bold) {
-            line = line.replace(b[0], `<b>${b[1]}</b>`)
+            line = line.replace(b[0], `<b>${b[1]}</b>`);
           }
         }
 
@@ -126,29 +126,29 @@ const card = {
         const italic = [...line.matchAll(/\*(.*?)\*/g)];
         if (italic.length != 0) {
           for (const i of italic) {
-            line = line.replace(i[0], `<i>${i[1]}</i>`)
+            line = line.replace(i[0], `<i>${i[1]}</i>`);
           }
         }
 
 
         // Renders List
-        const list = line.match(/^\* /)
+        const list = line.match(/^\* /);
         if (list) {
-          line = `<li>${line.replace("* ", "").trim()}</li>`
+          line = `<li>${line.replace("* ", "").trim()}</li>`;
         }
 
         // Renders List
-        const quote = line.match(/^\> /)
+        const quote = line.match(/^\> /);
         if (quote) {
-          line = `<blockquote>${line.replace("> ", "").trim()}</blockquote>`
+          line = `<blockquote>${line.replace("> ", "").trim()}</blockquote>`;
         }
 
         // Add to page
-        html += `<p>${line}</p>\n`
+        html += `<p>${line}</p>\n`;
       }
 
       
-      return html
+      return html;
     },
     loadProfile(value) {
       if (!this.hasData(value)) return [value, {}, ""];
@@ -156,7 +156,7 @@ const card = {
       // Separate content and profile
       const parts = value.split(this.profileDivisor);
       
-      const profileText = parts[1].replace(/=/g, "").trim()
+      const profileText = parts[1].replace(/=/g, "").trim();
       // Load yaml
       let profile = {};
       try {
@@ -172,16 +172,16 @@ const card = {
       return [content, profile, profileText];
    },
     makeTOC() {
-      const tabs = document.getElementsByClassName("tab")
+      const tabs = document.getElementsByClassName("tab");
       
       for (const tab of tabs) {
-        if (!tab.innerHTML.includes("[[toc]]")) return
-        const headers = tab.querySelectorAll("h1, h2, h3, h4, h5, h6")
-        let toc = ""
+        if (!tab.innerHTML.includes("[[toc]]")) return;
+        const headers = tab.querySelectorAll("h1, h2, h3, h4, h5, h6");
+        let toc = "";
 
         for (const head of headers) {
-          head.id = head.innerText.replace(/\s/g, "-").replace(/\'/g, "-").toLowerCase().replace(/\:/g, "").trim()
-          toc += `<a class="button button--toc ${head.tagName}" onclick="document.querySelector('#${head.id}').scrollIntoView();">${head.innerText.replace(/\:/g, "")}</a>\n`
+          head.id = head.innerText.replace(/\s/g, "-").replace(/\'/g, "-").toLowerCase().replace(/\:/g, "").trim();
+          toc += `<a class="button button--toc ${head.tagName}" onclick="document.querySelector('#${head.id}').scrollIntoView();">${head.innerText.replace(/\:/g, "")}</a>\n`;
         } 
         
 
@@ -189,7 +189,7 @@ const card = {
                               <h1 class="toc-title">Table of Contents</h1>
                               ${toc}
                             </div>`
-        document.getElementById(tab.id).innerHTML = tab.innerHTML.replace("[[toc]]", toc_content)
+        document.getElementById(tab.id).innerHTML = tab.innerHTML.replace("[[toc]]", toc_content);
 
         
       }
@@ -210,14 +210,14 @@ const card = {
 
     async refresh() {
       this.rerender = false;
-      await Vue.nextTick()
+      await Vue.nextTick();
       this.rerender = true;
     },
     isProfileExist(area) {
       if (!this.areas[area].hasOwnProperty("profile")) {
-        return false
+        return false;
       } else {
-        return Object.keys(this.areas[area].profile).length != 0
+        return Object.keys(this.areas[area].profile).length != 0;
       }
     },
     toggleArea() {

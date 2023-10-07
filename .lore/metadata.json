@@ -22,11 +22,6 @@
       "path": "assets/new.json",
       "parent": "geh"
     },
-    "add-page": {
-      "title": "Add Page",
-      "path": "assets/new.json",
-      "parent": ""
-    },
     "story": {
       "title": "Story",
       "path": "content/story.json",
@@ -346,10 +341,19 @@
       "title": "The Irregular Entity",
       "path": "content/story/tie/tie.json",
       "parent": "story"
+    },
+    "template-character": {
+      "title": "Template: Character",
+      "path": "templates/template-character.json",
+      "parent": "template"
+    },
+    "template": {
+      "title": "Templates",
+      "path": "templates/template.json",
+      "parent": ""
     }
   },
-  "templates": {
-    "n/a": "",
-    "character": "templates/character.json"
-  }
+  "templates": [
+    "template-character"
+  ]
 }

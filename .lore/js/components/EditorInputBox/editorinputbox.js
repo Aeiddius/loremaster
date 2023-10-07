@@ -33,7 +33,7 @@ const editorinputbox = {
   template: `
 
   <div class="flex flex-c boxes hide" :id="bid">
-    <label>{{label}}</label>
+    <label :for="iid">{{label}}</label>
     <input type="text" :id="iid" class="input width-100"
            :placeholder="placeholder">
 

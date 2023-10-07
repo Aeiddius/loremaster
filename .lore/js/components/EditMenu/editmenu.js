@@ -1,38 +1,54 @@
 const editmenu = {
   name: "EditMenu",
   props: {
-    templates: { type: Object, required: true, default: {}},
+    metadata: { type: Object, required: true, default: {}},
   },
   methods: {
     open() {
-      document.getElementById("editor-box").classList.remove("hide")
+      document.getElementById("editor-box").classList.remove("hide");
     },
     add() {
-      changePage('add-page')
-      this.open()
+      changePage('add-page');
+      isCurrentPageTemplate = false
+      this.open();
     },
     openDelete() {
-      document.getElementById("delete-confirm").classList.remove("hide")
-      console.log(document.getElementById("delete-confirm"))
+      document.getElementById("delete-confirm").classList.remove("hide");
+      console.log(document.getElementById("delete-confirm"));
     },
-    openTemplate() {
-      const val = document.getElementById("template-list").value
-      console.log(val)
+    async openTemplate() {
+      const val = document.getElementById("template-list").value;
+      console.log(val);
+      
+      // const data = await fetchData(`templates/${val}.json`)
+
+      changePage(val)
+    },
+    deselectTemplate() {
+      const elem = document.getElementById("template-list").options;
+      
+      for(var i = 0; i < elem.length; i++){
+        elem[i].selected = false;
+      }
+
     }
   },
   template: `
     <div id="editmode" class="hide">
       <h1 class="titles">Edit Mode</h1>
-      <button class="button--edit" @click="open">Edit Page</button>
-      <button class="button--edit" @click="add">Add Page</button>
-      <button class="button--edit button--edit-red" @click="openDelete">Delete Page</button>
 
+      <div class="flex gap-10">
+      <Btn bid="tab-delete-btn" class="btn--dark" name="Edit Page" :click="open"/>
+      <Btn bid="tab-delete-btn" class="btn--dark" name="Add Page" :click="add"/>
+      <Btn bid="tab-delete-btn" class="btn--dark btn--red" name="Delete Page" :click="openDelete"/>   
+      </div>
+  
 
       <div class="template-list">
         <h2>Templates</h2>
-        <select name="Cars"  size="6" @change="openTemplate" id="template-list">
-          <template v-for="(value, index) in templates">
-            <option :value="index" v-if="index != 'n/a'">{{index}}</option>  
+        <select name="Templates"  size="6" @change="openTemplate" id="template-list" title="templates" v-click-outside="deselectTemplate">
+          <template v-for="(value, index) in metadata.templates">
+            <option :value="value" v-if="index != 'n/a'">{{value}}</option>  
           </template>
         </select>  
       </div>
