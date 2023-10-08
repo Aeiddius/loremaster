@@ -1,0 +1,17 @@
+pyinstaller --onefile --upx-dir=C:\upx-4.1.0-win64\upx.exe main.py
+pyinstaller --onefile --add-data 'src\config.cfg;config' --upx-dir=C:\upx-4.1.0-win64\upx.exe src\create.py 
+pyinstaller --onefile --upx-dir=C:\upx-4.1.0-win64\upx.exe src\create.py 
+
+create.exe "C:\Users\Adrian Tagayom\Documents\Programming\web-apps\loremaster"
+python create.py "C:\Users\Adrian Tagayom\Documents\Programming\web-apps\loremaster\Project"
+
+
+python src\main.py
+python -m nuitka --follow-imports src\create.py
+
+
+python -m nuitka --standalone --follow-imports src\create.py
+python -m nuitka --plugin-enable=pywebview --follow-imports src\create.py
+
+python -m nuitka --show-progress --standalone --experimental=use_pefile --experimental=use_pefile_recurse --experimental=use_pefile_fullrecurse --include-package=webview src\create.py
+python -m nuitka --show-progress --standalone --experimental=use_pefile --experimental=use_pefile_recurse --experimental=use_pefile_fullrecurse src\create.py
