@@ -38,9 +38,9 @@ const editmenu = {
       <h1 class="titles">Edit Mode</h1>
 
       <div class="flex gap-10">
-      <Btn bid="tab-delete-btn" class="btn--dark" name="Edit Page" :click="open"/>
-      <Btn bid="tab-delete-btn" class="btn--dark" name="Add Page" :click="add"/>
-      <Btn bid="tab-delete-btn" class="btn--dark btn--red" name="Delete Page" :click="openDelete"/>   
+      <Btn bid="editemenu-edit-page" class="btn--dark" name="Edit Page" :click="open"/>
+      <Btn bid="editemenu-add-page" class="btn--dark" name="Add Page" :click="add"/>
+      <Btn bid="editemenu-delete-page" class="btn--dark btn--red" name="Delete Page" :click="openDelete"/>   
       </div>
   
 

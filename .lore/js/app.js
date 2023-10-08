@@ -143,6 +143,15 @@ function start() {
         this.$forceUpdate();
         this.pageName = pageMeta.title;   // Places here so it updates with the content at the same time
         
+
+        const side = document.getElementById("history-content")
+        let sidehtml = ``
+        for (let i = historyList.length - 1; i >= 0; i--) {
+          const page = historyList[i]
+          sidehtml += `<a class="button button--toc H1" onclick="changePage('${page}')">${this.metadata.directory[page].title}</a>`
+        }
+        side.innerHTML = sidehtml
+
       },
       /**
      * Reloads the page card component

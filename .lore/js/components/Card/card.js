@@ -17,6 +17,7 @@ const card = {
 
       // Misc
       rerender: true,
+      noPreview: false,
     }
   },
   emits: ['processed-content'],
@@ -27,7 +28,7 @@ const card = {
     directory: { type: Object, required: true },
     toggleState: { type: Boolean }
   },
-  components: ['BreadCrumbs'],
+  components: ['BreadCrumbs', 'SpoilerWarning'],
   watch: {
     content: {
       immediate: true,
@@ -140,7 +141,9 @@ const card = {
         // Renders List
         const quote = line.match(/^\> /);
         if (quote) {
-          line = `<blockquote>${line.replace("> ", "").trim()}</blockquote>`;
+          line = `<blockquote>${line.replace("> ", "").replace(' - ', '<br> - ').trim()}</blockquote>`;
+
+
         }
 
         // Add to page
@@ -170,7 +173,8 @@ const card = {
       const content = parts[2].trim();
     
       return [content, profile, profileText];
-   },
+    },
+
     makeTOC() {
       const tabs = document.getElementsByClassName("tab");
       
@@ -194,8 +198,10 @@ const card = {
         
       }
     },
-    // Check if There is a data for profiles inside
+
+    
     hasData(value) {
+      // Check if There is a data for profiles inside
       const equalsIndex1 = value.indexOf(this.profileDivisor);
       const equalsIndex2 = value.lastIndexOf(this.profileDivisor);
       
@@ -225,9 +231,10 @@ const card = {
       const previewArea = document.getElementById("preview-area");
 
       if (!previewArea) {
+        this.noPreview = true
         return
       }
-      
+      this.noPreview = false
       if (this.toggleState) {
         fullArea.classList.remove("hide");
         previewArea.classList.add("hide");
@@ -242,11 +249,18 @@ const card = {
 
       
       <div class="card">
+        
+        <SpoilerWarning :toggle-state="toggleState" :no-preview="noPreview"/>
+
+
         <h1 id="title">
           {{ title }} 
         </h1>
 
+
         <BreadCrumbs :directory="directory" :page-id="pageId" v-if="rerender"/>
+
+  
 
         <div v-for="(area, name, index) in areas"
              v-if="rerender"
@@ -265,10 +279,11 @@ const card = {
 
       <!-- <div>© 2021-2023 Aeiddius. All rights reserved.</div> -->
 
-<!--       
-      <div id="side-toc">
-        
-      </div> -->
+      
+      <div id="side-toc" class="toc side-toc">
+        <h1 class="toc-title">History</h1>
+        <div id="history-content"></div>
+      </div>
 
     </div>
   ` 

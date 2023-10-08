@@ -144,6 +144,15 @@ function start() {
         this.$forceUpdate();
         this.pageName = pageMeta.title;   // Places here so it updates with the content at the same time
         
+
+        const side = document.getElementById("history-content")
+        let sidehtml = ``
+        for (let i = historyList.length - 1; i >= 0; i--) {
+          const page = historyList[i]
+          sidehtml += `<a class="button button--toc H1" onclick="changePage('${page}')">${this.metadata.directory[page].title}</a>`
+        }
+        side.innerHTML = sidehtml
+
       },
       /**
      * Reloads the page card component
@@ -282,6 +291,7 @@ function mount(app) {
     sidebar,
     sidebaredit,
     sidebartoggle,
+    spoilerwarning,
     tab,
     toggle,
   ]
@@ -629,6 +639,7 @@ const card = {
 
       // Misc
       rerender: true,
+      noPreview: false,
     }
   },
   emits: ['processed-content'],
@@ -639,7 +650,7 @@ const card = {
     directory: { type: Object, required: true },
     toggleState: { type: Boolean }
   },
-  components: ['BreadCrumbs'],
+  components: ['BreadCrumbs', 'SpoilerWarning'],
   watch: {
     content: {
       immediate: true,
@@ -752,7 +763,9 @@ const card = {
         // Renders List
         const quote = line.match(/^\> /);
         if (quote) {
-          line = `<blockquote>${line.replace("> ", "").trim()}</blockquote>`;
+          line = `<blockquote>${line.replace("> ", "").replace(' - ', '<br> - ').trim()}</blockquote>`;
+
+
         }
 
         // Add to page
@@ -782,7 +795,8 @@ const card = {
       const content = parts[2].trim();
     
       return [content, profile, profileText];
-   },
+    },
+
     makeTOC() {
       const tabs = document.getElementsByClassName("tab");
       
@@ -806,8 +820,10 @@ const card = {
         
       }
     },
-    // Check if There is a data for profiles inside
+
+    
     hasData(value) {
+      // Check if There is a data for profiles inside
       const equalsIndex1 = value.indexOf(this.profileDivisor);
       const equalsIndex2 = value.lastIndexOf(this.profileDivisor);
       
@@ -837,9 +853,10 @@ const card = {
       const previewArea = document.getElementById("preview-area");
 
       if (!previewArea) {
+        this.noPreview = true
         return
       }
-      
+      this.noPreview = false
       if (this.toggleState) {
         fullArea.classList.remove("hide");
         previewArea.classList.add("hide");
@@ -854,11 +871,18 @@ const card = {
 
       
       <div class="card">
+        
+        <SpoilerWarning :toggle-state="toggleState" :no-preview="noPreview"/>
+
+
         <h1 id="title">
           {{ title }} 
         </h1>
 
+
         <BreadCrumbs :directory="directory" :page-id="pageId" v-if="rerender"/>
+
+  
 
         <div v-for="(area, name, index) in areas"
              v-if="rerender"
@@ -877,10 +901,11 @@ const card = {
 
       <!-- <div>© 2021-2023 Aeiddius. All rights reserved.</div> -->
 
-<!--       
-      <div id="side-toc">
-        
-      </div> -->
+      
+      <div id="side-toc" class="toc side-toc">
+        <h1 class="toc-title">History</h1>
+        <div id="history-content"></div>
+      </div>
 
     </div>
   ` 
@@ -986,9 +1011,9 @@ const editmenu = {
       <h1 class="titles">Edit Mode</h1>
 
       <div class="flex gap-10">
-      <Btn bid="tab-delete-btn" class="btn--dark" name="Edit Page" :click="open"/>
-      <Btn bid="tab-delete-btn" class="btn--dark" name="Add Page" :click="add"/>
-      <Btn bid="tab-delete-btn" class="btn--dark btn--red" name="Delete Page" :click="openDelete"/>   
+      <Btn bid="editemenu-edit-page" class="btn--dark" name="Edit Page" :click="open"/>
+      <Btn bid="editemenu-add-page" class="btn--dark" name="Add Page" :click="add"/>
+      <Btn bid="editemenu-delete-page" class="btn--dark btn--red" name="Delete Page" :click="openDelete"/>   
       </div>
   
 
@@ -1969,6 +1994,27 @@ const sidebartoggle = {
   `
 }
 
+const spoilerwarning = {
+  name: "SpoilerWarning",
+  props: {
+    toggleState: { type: Boolean, required: true },
+    noPreview: { type: Boolean, required: true },
+  }, 
+  template: `
+    <div class="warning" v-if="noPreview == false">
+
+
+        <span v-if="toggleState == true" class="content spoiler">
+          Spoiler Mode
+        </span>
+        <span v-if="toggleState == false"  class="content">
+          Preview Mode
+        </span>
+
+    </div>
+  `
+}
+
 const tab = {
   name: "Tab",
   data() {
@@ -1986,6 +2032,13 @@ const tab = {
     this.groupclass = makeid(6)
     this.buttonclass = makeid(6)
 
+    // const tabs = document.getElementsByClassName("tab")
+    // for (let tab of tabs) {
+    //   if (!tab.classList.contains("hide")) {
+    //     console.log(tab)
+    //   }
+    // }
+
   },
   methods: {
 
@@ -2000,7 +2053,8 @@ const tab = {
           // const toc = tab.getElementsByClassName("toc")
           // if (toc) {
           //   const toc_ = toc[0]
-          //   console.log(tab)
+          //   document.getElementById("side-toc").innerHTML = toc_.innerHTML
+          //   console.log(toc_)
           // }
           continue;
         } 

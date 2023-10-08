@@ -485,10 +485,34 @@ summary {
   margin-left: 5em !important;
 }
 
-#side-toc {
-  width: 250px;
+.side-toc {
+  width: 150px;
+  position: fixed;
+  top: 120px;
+  right: 50px;
+  z-index: 90000;
+  padding: 5px;
+  background-color: transparent;
+}
+.side-toc h1 {
+  margin-bottom: 5px !important;
+  text-align: start !important;
+  padding: 1px 3px 1px 3px !important;
+}
+.side-toc a {
+  font-size: 12px;
+  color: #191919;
+}
+.side-toc #history-content {
+  display: flex;
+  flex-direction: column;
 }
 
+@media screen and (max-width: 1100px) {
+  .side-toc {
+    display: none;
+  }
+}
 .confirmbox {
   width: 100%;
   height: 100%;
@@ -984,6 +1008,41 @@ summary {
   background-color: #252525;
 }
 
+.warning {
+  position: relative;
+  transition: all 0.4s ease;
+}
+.warning .content {
+  position: absolute;
+  right: 0px;
+  top: 30px;
+  width: -moz-fit-content;
+  width: fit-content;
+  font-size: 14px;
+  margin: 10px 0px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background-color: #4584FF;
+  color: white;
+}
+
+.spoiler {
+  background-color: #252525 !important;
+}
+
+@media screen and (max-width: 500px) {
+  .warning {
+    width: 50px;
+    top: -40px;
+    right: 10px;
+    position: absolute;
+  }
+  .warning span {
+    font-size: 12px !important;
+    width: 90px !important;
+    text-align: center;
+  }
+}
 .button {
   padding: 3px 5px 3px 5px;
   margin-right: 5px;
@@ -1029,6 +1088,9 @@ summary {
   color: #4584FF;
   text-decoration: none;
   font-weight: normal;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
 }
 
 .toggle {
@@ -1081,7 +1143,8 @@ summary {
 
 html {
   overflow-x: hidden;
-  margin-right: calc(-1 * (100vw - 100%));
+  overflow-y: scroll;
+  margin-right: calc(-1 * (100vw - 100%)) !important;
 }
 
 body {
