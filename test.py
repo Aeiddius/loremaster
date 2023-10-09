@@ -1,4 +1,6 @@
-[[Home]]
+import json
+
+x = """[[Home]]
 [[Story]]
 - [[tboah]]
 - [[eotoq]]
@@ -17,4 +19,19 @@
 - [[Beings]]
 - [[Items]]
 [[Librarium]]
-[[About]]
+[[About]]"""
+
+
+dictionary = {
+  "areas": {
+    "full": {
+      "tabs": {
+        "default": x
+      }
+    }
+  }
+}
+
+
+with open("nav.json", "w", encoding="utf8") as f:
+  f.write(json.dumps(dictionary, ensure_ascii=False, indent=2))

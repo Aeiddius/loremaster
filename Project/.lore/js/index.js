@@ -1080,18 +1080,23 @@ const editmenu = {
         elem[i].selected = false;
       }
 
+    },
+    editNav() {
+      changePage('nav')
     }
   },
   template: `
-    <div id="editmode" class="hide">
+    <div id="editmode" class="hide flex flex-c gap-10">
       <h1 class="titles">Edit Mode</h1>
 
       <div class="flex gap-10">
-      <Btn bid="editemenu-edit-page" class="btn--dark" name="Edit Page" :click="open"/>
-      <Btn bid="editemenu-add-page" class="btn--dark" name="Add Page" :click="add"/>
-      <Btn bid="editemenu-delete-page" class="btn--dark btn--red" name="Delete Page" :click="openDelete"/>   
+        <Btn bid="editemenu-edit-page" class="btn--dark" name="Edit" :click="open"/>
+        <Btn bid="editemenu-add-page" class="btn--dark" name="Add" :click="add"/>
+        <Btn bid="editemenu-delete-page" class="btn--dark btn--red" name="Delete" :click="openDelete"/>   
       </div>
-  
+
+
+      <Btn bid="editemenu-edit-nav" class="btn--dark" name="Edit Nav" :click="editNav"/>
 
       <div class="template-list">
         <h2>Templates</h2>
@@ -1811,14 +1816,10 @@ const sidebar = {
     immediate: true,
     deep: true,
     async handler(value) {
-        const resp = await (fetch("assets/nav.md"))
-        if (resp.status === 404) {
-          console.log("Nav not found")
-          return
-        }
+        const resp = await fetchData("assets/nav.json")
+        const navs = resp.areas.full.tabs.default.trim().split("\n")
 
 
-        const navs = (await resp.text()).trim().split("\n")
         let lastNav = ""
         for (const nav of navs) {
           const newnav = nav.replace(/\[\]/g, "").trim()
