@@ -3,6 +3,7 @@ import subprocess
 import os
 import argparse
 
+
 from create_api import Api
 
 invalid = """<html>
@@ -30,7 +31,6 @@ invalid = """<html>
     </div> 
   </body>
 </html>"""
-os.chdir(sys._MEIPASS)
 class GUI:
   
   def __init__(self):

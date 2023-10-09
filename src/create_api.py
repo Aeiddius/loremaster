@@ -67,7 +67,7 @@ class Api:
     # Save newPage as json
     file_path = self.createPath(path, pageId)
     with open(file_path, "w", encoding="utf8") as outfile:
-      outfile.write(json.dumps(newPage))
+      outfile.write(json.dumps(newPage, ensure_ascii=False))
     
     # Save the updated metadata
     self.metadata["directory"][pageId] = metaEntry[pageId]
@@ -98,7 +98,7 @@ class Api:
   
   def saveMetadata(self):
     with open(self.path_metadata_abs, "w", encoding="utf8") as outfile:
-      outfile.write(json.dumps(self.metadata, indent=2))
+      outfile.write(json.dumps(self.metadata, indent=2, ensure_ascii=False))
     
     print("Saved Metadata")
 

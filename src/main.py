@@ -21,7 +21,7 @@ class Api:
   
   def saveConfig(self):
     with open("src/config.json", "w", encoding="utf8") as f:
-      f.write(json.dumps(self.config, indent=2))
+      f.write(json.dumps(self.config, indent=2, ensure_ascii=False))
     
   def getRecent(self):
     if self.config == "":
